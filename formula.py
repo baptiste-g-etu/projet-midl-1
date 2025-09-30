@@ -1,9 +1,15 @@
+"""
+Base types for the project.
+"""
+
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Self
+from typing import Any, Self
 
 
-type ArithExpression = Variable | Comp
+# Types which are arithmetic expressions (usually ArithExpressions combined with arithmetic operators)
+type ArithExpression = Variable | Comp | IntegerConst
+# Types which output a logic formula (usually LogicFormulas combined with logic operators)
 type LogicFormula = Quantifier | BoolConst
 
 
@@ -24,25 +30,20 @@ class BoolOp:
 
 
 @dataclass
-class BoolOpBuilder:
-    comp: BoolOpType
-
-    def __call__(self, formula1: LogicFormula, formula2: LogicFormula) -> BoolOp:
-        return BoolOp(formula1, self.comp, formula2)
-
-
-# Because the Python bitwise OR has higher priority than the comparison operators,
-# we need to invert the operator priority afterwards.
-#
-# For example :
-# a > b | c > d is evaluated as a > (b | c) > d (because of Python),
-# then (b | c) is translated into IncompleteFormula(b, |, c),
-# then a > (b | c) is translated into IncompleteFormula(a > b, |, c),
-# then IncompleteFormula(a > b, |, c) > d is translated into a > b | c > d
-#
-# a > b | c > d | e > f = a > (b | c) > (d | e) > f = ((a > b) | c) > (d | e) > f = ((a > b) | c > d) ( | e) > f
-@dataclass
 class IncompleteFormula:
+    """
+    Because the Python bitwise OR has higher priority than the comparison operators,
+    we need to invert the operator priority afterwards.
+
+    For example :
+    `a > b | c > d` is evaluated as `a > (b | c) > d` (because of Python),
+    then `(b | c)` is translated into `IncompleteFormula(b, |, c)`,
+    then `a > (b | c)` is translated into `IncompleteFormula(a > b, |, c)`,
+    then `IncompleteFormula(a > b, |, c) > d` is translated into `a > b | c > d`
+    (except because of Python comparison that transform `a > b > c` into `a > b` and `b > c`,
+    only returning the result of `b > c`, it’s actually even more complicated).
+    """
+
     expr1: ArithExpression
     op: BoolOpType
     expr2: ArithExpression
@@ -51,18 +52,22 @@ class IncompleteFormula:
         return f"INCOMPLETE({{}} {self.expr1} {self.op} {self.expr2} {{}})"
 
 
+class ArithOpType(StrEnum):
+    SUM = "+"
+    SUB = "-"
+    PROD = "×"
+    # DIV = "/" # Division isn’t supported
+
+
 @dataclass
-class Variable:
-    name: str
+class ArithOp:
+    expr1: ArithExpression
+    boolop: ArithOpType
+    expr2: ArithExpression
 
     def __repr__(self) -> str:
-        return self.name
-
-    def __or__(self, rhs: Self) -> IncompleteFormula:
-        return IncompleteFormula(self, BoolOpType.DISJ, rhs)
-
-    def __and__(self, rhs: Self) -> IncompleteFormula:
-        return IncompleteFormula(self, BoolOpType.CONJ, rhs)
+        # TODO Add parenthesis
+        return f"{self.expr1} {self.boolop} {self.expr2}"
 
 
 class CompType(StrEnum):
@@ -84,11 +89,60 @@ class Comp:
 
 
 @dataclass
-class CompBuilder:
-    comp: CompType
+class Variable:
+    name: str
 
-    def __call__(self, expr1: ArithExpression, expr2: ArithExpression) -> Comp:
-        return Comp(expr1, self.comp, expr2)
+    def __repr__(self) -> str:
+        return self.name
+
+    # Logical operators - they build an IncompleteFormula
+    # (logical operators do not operate directly onto variables,
+    # instead they wait for a comparison to operate onto it)
+    def __or__(self, rhs: ArithExpression | int) -> IncompleteFormula:
+        return IncompleteFormula(self, BoolOpType.DISJ, into_arith_expr(rhs))
+
+    def __ror__(self, lhs: ArithExpression | int) -> IncompleteFormula:
+        return IncompleteFormula(into_arith_expr(lhs), BoolOpType.DISJ, self)
+
+    def __and__(self, rhs: ArithExpression | int) -> IncompleteFormula:
+        return IncompleteFormula(self, BoolOpType.CONJ, into_arith_expr(rhs))
+
+    def __rand__(self, lhs: ArithExpression | int) -> IncompleteFormula:
+        return IncompleteFormula(into_arith_expr(lhs), BoolOpType.CONJ, self)
+
+    def __add__(self, rhs: ArithExpression | int):
+        return ArithOp(self, ArithOpType.SUM, into_arith_expr(rhs))
+
+    def __radd__(self, lhs: ArithExpression | int):
+        return ArithOp(into_arith_expr(lhs), ArithOpType.SUM, self)
+
+    def __sub__(self, rhs: ArithExpression | int):
+        return ArithOp(self, ArithOpType.SUB, into_arith_expr(rhs))
+
+    def __rsub__(self, lhs: ArithExpression | int):
+        return ArithOp(into_arith_expr(lhs), ArithOpType.SUB, self)
+
+    def __mul__(self, rhs: ArithExpression | int):
+        return ArithOp(self, ArithOpType.PROD, into_arith_expr(rhs))
+
+    def __rmul__(self, lhs: ArithExpression | int):
+        return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
+
+    def __lt__(self, rhs: IncompleteFormula | ArithExpression | int) -> Comp:
+        if isinstance(rhs, IncompleteFormula):
+            # If we compare with an IncompleteFormula, we need to call it instead
+            # (so it can add the comparison to the existing IncompleteFormula).
+            return rhs > self
+        return Comp(self, CompType.LOWER_THAN, into_arith_expr(rhs))
+
+    def __le__(self, rhs: Self) -> IncompleteFormula:
+        raise NotImplementedError("Called Variable::__le__")
+
+    def __rlt__(self, rhs: Self) -> IncompleteFormula:
+        raise NotImplementedError("Called Variable::__rlt__")
+
+    def __eq__(self, rhs: Self) -> IncompleteFormula:  # type: ignore because __eq__ is supposed to always return a bool
+        raise NotImplementedError("Called Variable::__eq__")
 
 
 @dataclass
@@ -97,6 +151,14 @@ class BoolConst:
 
     def __repr__(self) -> str:
         return "⊤" if self.const else "⊥"
+
+
+@dataclass
+class IntegerConst:
+    const: int
+
+    def __repr__(self) -> str:
+        return str(self.const)
 
 
 class QuantifierType(StrEnum):
@@ -116,6 +178,30 @@ class Quantifier:
     def __repr__(self) -> str:
         inner_is_quantif = isinstance(self.formula, Quantifier)
         return f"{self.quantifier}{self.variable}.{'' if inner_is_quantif else '('}{self.formula}{'' if inner_is_quantif else ')'}"
+
+
+@dataclass
+class Not:
+    formula: LogicFormula
+
+    def __repr__(self) -> str:
+        return f"¬{self.formula}"
+
+
+@dataclass
+class BoolOpBuilder:
+    op: BoolOpType
+
+    def __call__(self, formula1: LogicFormula, formula2: LogicFormula) -> BoolOp:
+        return BoolOp(formula1, self.op, formula2)
+
+
+@dataclass
+class ArithOpBuilder:
+    op: ArithOpType
+
+    def __call__(self, formula1: ArithExpression, formula2: ArithExpression) -> ArithOp:
+        return ArithOp(formula1, self.op, formula2)
 
 
 class QuantifierBuilder:
@@ -151,8 +237,32 @@ class QuantifierBuilder:
 
 
 @dataclass
-class Not:
-    formula: LogicFormula
+class CompBuilder:
+    comp: CompType
 
-    def __repr__(self) -> str:
-        return f"¬{self.formula}"
+    def __call__(self, expr1: ArithExpression, expr2: ArithExpression) -> Comp:
+        return Comp(expr1, self.comp, expr2)
+
+
+def into_arith_expr(var: Any) -> ArithExpression:
+    """
+    Converts (almost) anything into an ArithExpression.
+
+    This is useful to allow, for example `Variable("a") < 1` without having to type `Variable("a") < IntegerConst(1)`.
+    """
+    if isinstance(var, int):
+        return IntegerConst(var)
+    else:
+        return var
+
+
+def into_logic_formula(var: Any) -> LogicFormula:
+    """
+    Converts (almost) anything into a LogicFormula.
+
+    This is useful to allow, for example `forall.a(True)` without having to type `forall.a(BoolConst(True))`.
+    """
+    if isinstance(var, bool):
+        return BoolConst(var)
+    else:
+        return var

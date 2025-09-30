@@ -1,4 +1,7 @@
 from formula import (
+    ArithOp,
+    ArithOpBuilder,
+    ArithOpType,
     BoolConst,
     BoolOp,
     BoolOpBuilder,
@@ -41,6 +44,17 @@ conj = BoolOpBuilder(BoolOpType.CONJ)
 disj = BoolOpBuilder(BoolOpType.DISJ)
 
 # TODO impl (function or class ?)
+
+# Assumptions of the second part made from the original syntax.py
+Sum = ArithOpType.SUM
+Sub = ArithOpType.SUB
+Prod = ArithOpType.PROD
+
+ArithOpF = ArithOp
+
+sum = ArithOpBuilder(ArithOpType.SUM)
+sub = ArithOpBuilder(ArithOpType.SUB)
+prod = ArithOpBuilder(ArithOpType.PROD)
 
 # New aliases to make formulas faster to type and easier to read
 forall = QuantifierBuilder(QuantifierType.FORALL)
