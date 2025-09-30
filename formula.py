@@ -8,9 +8,9 @@ from typing import Any, Self
 
 
 # Types which are arithmetic expressions (usually ArithExpressions combined with arithmetic operators)
-type ArithExpression = Variable | Comp | IntegerConst
+type ArithExpression = Variable | IntegerConst | ArithOp
 # Types which output a logic formula (usually LogicFormulas combined with logic operators)
-type LogicFormula = Quantifier | BoolConst
+type LogicFormula = Comp | Quantifier | BoolConst | BoolOp
 
 
 class BoolOpType(StrEnum):
@@ -27,6 +27,12 @@ class BoolOp:
     def __repr__(self) -> str:
         # TODO Add parenthesis
         return f"{self.formula1} {self.boolop} {self.formula2}"
+
+    def __lt__(self, rhs: Any):
+        raise SyntaxError("Cannot compare booleans")
+
+    def __gt__(self, rhs: Any):
+        raise SyntaxError("Cannot compare booleans")
 
 
 @dataclass
@@ -49,22 +55,97 @@ class IncompleteFormula:
     expr2: ArithExpression | LogicFormula
 
     def __repr__(self) -> str:
-        return f"INCOMPLETE({{}} {self.expr1} {self.op} {self.expr2} {{}})"
+        return (
+            f"INCOMPLETE@{hex(id(self))}({{}} {self.expr1} {self.op} {self.expr2} {{}})"
+        )
 
-    def __gt__(self, lhs: Self | ArithExpression | int):
+    def __bool__(self) -> bool:
+        # Always return True to be able to return self because Python lazy evaluates comparison chains
+        # (because a < b < c is transformed into an expression that contains the `and` keyword).
+        return True
+
+    # Actually not a magic function, has to be called manually
+    # TODO Change this Any
+    def __rgt__(self, lhs: Self | ArithExpression | int) -> Any:
         """
-        Should only be called with `self` as the right-hand side
-        (this is more like a « reverse lower than » than an actual « greater than »).
+        Should only be called with `self` as the right-hand side.
+        Called when a < b | c
+                      ^------ Variable.__lt__ redirects to IncompleteFormula.__rgt__
         """
-        if isinstance(lhs, Self):
-            # The > operator is used because it’s the only way to come into this branch
-            # (python wouldn’t replace the < if it was called between two instances of IncompleteFormula)
-            raise SyntaxError("Cannot use the > operator, use < instead")
+        print(
+            f"Called the IncompleteFormula.__rgt__, {self=}, {lhs=}, {hex(id(self))=}"
+        )
+        # Restore the most recent version of this IncompleteFormula if it exists
+        # (we basically store return values in globals because Python separates the calls between two chained comparisons).
+        if hex(id(self)) in globals():
+            self = globals()[hex(id(self))]
+        if isinstance(lhs, IncompleteFormula):
+            raise
+        # TODO Type IntoArithExpression ?
         elif isinstance(lhs, ArithExpression.__value__ | int):
             self.expr1 = into_arith_expr(lhs) < self.expr1
+        else:
+            pass
+        globals()[hex(id(self))] = self
+        return self
 
-    def __lt__(self, rhs: Self | ArithExpression | int):
-        pass
+    def __rlt__(self, lhs: Self | ArithExpression | int) -> Any:
+        """
+        Should only be called with `self` as the right-hand side.
+        Called when a > b | c
+                      ^------ Variable.__gt__ redirects to IncompleteFormula.__rlt__
+        """
+        print(
+            f"Called the IncompleteFormula.__rlt__, {self=}, {lhs=}, {hex(id(self))=}"
+        )
+        if hex(id(self)) in globals():
+            self = globals()[hex(id(self))]
+        if isinstance(lhs, IncompleteFormula):
+            raise
+        elif isinstance(lhs, ArithExpression.__value__ | int):
+            self.expr1 = into_arith_expr(lhs) > self.expr1
+        else:
+            pass
+        globals()[hex(id(self))] = self
+        return self
+
+    def __gt__(self, lhs: Self | ArithExpression | int) -> Any:
+        """
+        Should only be called with `self` as the left-hand side.
+        Called when a > b | c > d
+                              ^------ IncompleteFormula.__gt__
+        """
+        print(f"Called the IncompleteFormula.__gt__, {self=}, {lhs=}, {hex(id(self))=}")
+        if hex(id(self)) in globals():
+            self = globals()[hex(id(self))]
+        if isinstance(lhs, IncompleteFormula):
+            raise
+        elif isinstance(lhs, ArithExpression.__value__ | int):
+            self.expr2 = self.expr2 > into_arith_expr(lhs)
+        else:
+            pass
+        globals()[hex(id(self))] = self
+        return self
+
+    def __lt__(self, lhs: Self | ArithExpression | int) -> Any:
+        """
+        Should only be called with `self` as the left-hand side.
+        Called when a > b | c < d
+                              ^------ IncompleteFormula.__lt__
+        """
+        print(f"Called the IncompleteFormula.__lt__, {self=}, {lhs=}, {hex(id(self))=}")
+        if hex(id(self)) in globals():
+            self = globals()[hex(id(self))]
+        if isinstance(lhs, IncompleteFormula):
+            raise
+        elif isinstance(lhs, ArithExpression.__value__ | int):
+            self.expr2 = self.expr2 < into_arith_expr(lhs)
+        else:
+            pass
+        globals()[hex(id(self))] = self
+        return self
+
+    # TODO def __or__ and __and__
 
 
 class ArithOpType(StrEnum):
@@ -83,6 +164,9 @@ class ArithOp:
     def __repr__(self) -> str:
         # TODO Add parenthesis
         return f"{self.expr1} {self.boolop} {self.expr2}"
+
+    def __lt__(self, rhs: Any):
+        return Comp(self, CompType.LOWER_THAN, rhs)
 
 
 class CompType(StrEnum):
@@ -104,10 +188,22 @@ class Comp:
 
     # TODO Maybe implement a < b < c, for example as (a < b) and (b < c)
     def __lt__(self, rhs: Any):
-        raise SyntaxError("Cannot use comparison operators on boolean constants")
+        raise SyntaxError("Cannot compare comparisons")
 
     def __gt__(self, rhs: Any):
-        raise SyntaxError("Cannot use comparison operators on boolean constants")
+        raise SyntaxError("Cannot compare comparisons")
+
+    def __or__(self, rhs: LogicFormula) -> BoolOp:
+        return BoolOp(self, BoolOpType.DISJ, into_logic_formula(rhs))
+
+    def __ror__(self, lhs: LogicFormula) -> BoolOp:
+        return BoolOp(into_logic_formula(lhs), BoolOpType.DISJ, self)
+
+    def __and__(self, rhs: LogicFormula) -> LogicFormula:
+        return BoolOp(self, BoolOpType.CONJ, into_logic_formula(rhs))
+
+    def __rand__(self, lhs: LogicFormula) -> LogicFormula:
+        return BoolOp(into_logic_formula(lhs), BoolOpType.CONJ, self)
 
 
 @dataclass
@@ -152,12 +248,13 @@ class Variable:
 
     def __lt__(self, rhs: IncompleteFormula | ArithExpression | int) -> Comp:
         if isinstance(rhs, IncompleteFormula):
-            # If we compare with an IncompleteFormula, we need to call it instead
-            # (so it can add the comparison to the existing IncompleteFormula).
-            # To call it, we simply mark the comparison as NotImplemented,
-            # so Python can go search for IncompleteFormula.__gt__.
-            return NotImplemented
+            return rhs.__rgt__(self)
         return Comp(self, CompType.LOWER_THAN, into_arith_expr(rhs))
+
+    def __gt__(self, rhs: IncompleteFormula | ArithExpression | int) -> Comp:
+        if isinstance(rhs, IncompleteFormula):
+            return rhs.__rlt__(self)
+        return Comp(into_arith_expr(rhs), CompType.LOWER_THAN, self)
 
     def __le__(self, rhs: Self) -> IncompleteFormula:
         raise NotImplementedError("Called Variable::__le__")
