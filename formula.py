@@ -36,20 +36,35 @@ class IncompleteFormula:
     we need to invert the operator priority afterwards.
 
     For example :
-    `a > b | c > d` is evaluated as `a > (b | c) > d` (because of Python),
+    `a < b | c < d` is evaluated as `a < (b | c) < d` (because of Python),
     then `(b | c)` is translated into `IncompleteFormula(b, |, c)`,
-    then `a > (b | c)` is translated into `IncompleteFormula(a > b, |, c)`,
-    then `IncompleteFormula(a > b, |, c) > d` is translated into `a > b | c > d`
-    (except because of Python comparison that transform `a > b > c` into `a > b` and `b > c`,
-    only returning the result of `b > c`, it’s actually even more complicated).
+    then `a < (b | c)` is translated into `IncompleteFormula(a < b, |, c)`,
+    then `IncompleteFormula(a < b, |, c) < d` is translated into `a < b | c < d`
+    (except because of Python comparison that transform `a < b < c` into `a < b` and `b < c`,
+    only returning the result of `b < c`, it’s actually even more complicated).
     """
 
-    expr1: ArithExpression
+    expr1: ArithExpression | LogicFormula
     op: BoolOpType
-    expr2: ArithExpression
+    expr2: ArithExpression | LogicFormula
 
     def __repr__(self) -> str:
         return f"INCOMPLETE({{}} {self.expr1} {self.op} {self.expr2} {{}})"
+
+    def __gt__(self, lhs: Self | ArithExpression | int):
+        """
+        Should only be called with `self` as the right-hand side
+        (this is more like a « reverse lower than » than an actual « greater than »).
+        """
+        if isinstance(lhs, Self):
+            # The > operator is used because it’s the only way to come into this branch
+            # (python wouldn’t replace the < if it was called between two instances of IncompleteFormula)
+            raise SyntaxError("Cannot use the > operator, use < instead")
+        elif isinstance(lhs, ArithExpression.__value__ | int):
+            self.expr1 = into_arith_expr(lhs) < self.expr1
+
+    def __lt__(self, rhs: Self | ArithExpression | int):
+        pass
 
 
 class ArithOpType(StrEnum):
@@ -86,6 +101,13 @@ class Comp:
 
     def __repr__(self) -> str:
         return f"{self.expr1} {self.comp} {self.expr2}"
+
+    # TODO Maybe implement a < b < c, for example as (a < b) and (b < c)
+    def __lt__(self, rhs: Any):
+        raise SyntaxError("Cannot use comparison operators on boolean constants")
+
+    def __gt__(self, rhs: Any):
+        raise SyntaxError("Cannot use comparison operators on boolean constants")
 
 
 @dataclass
@@ -132,7 +154,9 @@ class Variable:
         if isinstance(rhs, IncompleteFormula):
             # If we compare with an IncompleteFormula, we need to call it instead
             # (so it can add the comparison to the existing IncompleteFormula).
-            return rhs > self
+            # To call it, we simply mark the comparison as NotImplemented,
+            # so Python can go search for IncompleteFormula.__gt__.
+            return NotImplemented
         return Comp(self, CompType.LOWER_THAN, into_arith_expr(rhs))
 
     def __le__(self, rhs: Self) -> IncompleteFormula:
@@ -152,6 +176,12 @@ class BoolConst:
     def __repr__(self) -> str:
         return "⊤" if self.const else "⊥"
 
+    def __lt__(self, rhs: Any):
+        raise SyntaxError("Cannot use comparison operators on boolean constants")
+
+    def __gt__(self, rhs: Any):
+        raise SyntaxError("Cannot use comparison operators on boolean constants")
+
 
 @dataclass
 class IntegerConst:
@@ -159,6 +189,9 @@ class IntegerConst:
 
     def __repr__(self) -> str:
         return str(self.const)
+
+    def __lt__(self, rhs: Any):
+        return Comp(self, CompType.LOWER_THAN, rhs)
 
 
 class QuantifierType(StrEnum):
@@ -178,6 +211,12 @@ class Quantifier:
     def __repr__(self) -> str:
         inner_is_quantif = isinstance(self.formula, Quantifier)
         return f"{self.quantifier}{self.variable}.{'' if inner_is_quantif else '('}{self.formula}{'' if inner_is_quantif else ')'}"
+
+    def __lt__(self, rhs: Any):
+        raise SyntaxError("Cannot use comparison operators on quantifiers")
+
+    def __gt__(self, rhs: Any):
+        raise SyntaxError("Cannot use comparison operators on quantifiers")
 
 
 @dataclass
@@ -253,6 +292,10 @@ def into_arith_expr(var: Any) -> ArithExpression:
     if isinstance(var, int):
         return IntegerConst(var)
     else:
+        if not isinstance(var, ArithExpression.__value__):
+            raise TypeError(
+                f"Cannot convert value of type {type(var)} into ArithExpression"
+            )
         return var
 
 
@@ -265,4 +308,8 @@ def into_logic_formula(var: Any) -> LogicFormula:
     if isinstance(var, bool):
         return BoolConst(var)
     else:
+        if not isinstance(var, LogicFormula.__value__):
+            raise TypeError(
+                f"Cannot convert value of type {type(var)} into LogicFormula"
+            )
         return var
