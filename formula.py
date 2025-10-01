@@ -66,6 +66,9 @@ class BoolOpType(StrEnum):
     CONJ = "∧"
     DISJ = "∨"
 
+    def __call__(self) -> Self:
+        return self
+
 
 class BoolOp(LogicFormula):
     def __init__(
@@ -91,6 +94,9 @@ class ArithOpType(StrEnum):
     SUB = "-"
     PROD = "×"
     # DIV = "/" # Division isn’t supported
+
+    def __call__(self) -> Self:
+        return self
 
 
 class ArithOp(ArithExpression):
@@ -163,6 +169,9 @@ class QuantifierType(StrEnum):
     EXISTS = "∃"
 
     def __repr__(self):
+        return self
+
+    def __call__(self) -> Self:
         return self
 
 
