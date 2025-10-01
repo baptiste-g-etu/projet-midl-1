@@ -9,6 +9,7 @@ from formula import (
     Comp,
     CompBuilder,
     CompType,
+    LogicFormula,
     Not,
     Quantifier,
     QuantifierBuilder,
@@ -49,7 +50,10 @@ exq = QuantifierBuilder(QuantifierType.EXISTS)
 conj = BoolOpBuilder(BoolOpType.CONJ)
 disj = BoolOpBuilder(BoolOpType.DISJ)
 
-# TODO impl (function or class ?)
+
+def impl(formula1: LogicFormula, formula2: LogicFormula) -> BoolOp:
+    return disj(Not(formula1), formula2)
+
 
 # Assumptions of the second part made from the original syntax.py
 Sum = ArithOpType.SUM
