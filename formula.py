@@ -69,7 +69,7 @@ class IncompleteFormula:
     def __rgt__(self, lhs: Self | ArithExpression | int) -> Any:
         """
         Should only be called with `self` as the right-hand side.
-        Called when a < b | c
+        Called when a < b | c > d
                       ^------ Variable.__lt__ redirects to IncompleteFormula.__rgt__
         """
         print(
@@ -80,6 +80,13 @@ class IncompleteFormula:
         if hex(id(self)) in globals():
             self = globals()[hex(id(self))]
         if isinstance(lhs, IncompleteFormula):
+            # TODO take the other formula’s half, make a final BoolOp using it,
+            # then recreate an IncompleteFormula with the other formula’s op,
+            # new sides with the new BoolOp and the other formula’s other half.
+            # Actually, maybe we have to embed the IncompleteFormula, as it can be not final yet,
+            # if we try to add operations to the left for example
+            # Might be tough to do if already converted into BoolOp.
+            # And might be fairly simple with nested IncompleteFormulas.
             raise
         # TODO Type IntoArithExpression ?
         elif isinstance(lhs, ArithExpression.__value__ | int):
@@ -92,7 +99,7 @@ class IncompleteFormula:
     def __rlt__(self, lhs: Self | ArithExpression | int) -> Any:
         """
         Should only be called with `self` as the right-hand side.
-        Called when a > b | c
+        Called when a > b | c > d
                       ^------ Variable.__gt__ redirects to IncompleteFormula.__rlt__
         """
         print(
@@ -168,6 +175,8 @@ class ArithOp:
     def __lt__(self, rhs: Any):
         return Comp(self, CompType.LOWER_THAN, rhs)
 
+    # TODO Define __or__ and __and__ for the special case where a < b + 1 | 1 + c < d
+
 
 class CompType(StrEnum):
     LOWER_THAN = "<"
@@ -176,12 +185,22 @@ class CompType(StrEnum):
     def __repr__(self):
         return self
 
+    def __call__(self) -> Self:
+        return self
+
 
 @dataclass
 class Comp:
     expr1: ArithExpression
     comp: CompType
     expr2: ArithExpression
+
+    def __init__(
+        self, expr1: ArithExpression, comp: CompType, expr2: ArithExpression
+    ) -> None:
+        self.expr1 = into_arith_expr(expr1)
+        self.comp = comp
+        self.expr2 = into_arith_expr(expr2)
 
     def __repr__(self) -> str:
         return f"{self.expr1} {self.comp} {self.expr2}"
@@ -262,8 +281,10 @@ class Variable:
     def __rlt__(self, rhs: Self) -> IncompleteFormula:
         raise NotImplementedError("Called Variable::__rlt__")
 
-    def __eq__(self, rhs: Self) -> IncompleteFormula:  # type: ignore because __eq__ is supposed to always return a bool
-        raise NotImplementedError("Called Variable::__eq__")
+    def __eq__(self, rhs: IncompleteFormula | ArithExpression | int) -> Comp:  # type: ignore because __eq__ is supposed to always return a bool
+        if isinstance(rhs, IncompleteFormula):
+            return rhs.__rlt__(self)
+        return Comp(self, CompType.EQUAL, into_arith_expr(rhs))
 
 
 @dataclass
@@ -388,6 +409,8 @@ def into_arith_expr(var: Any) -> ArithExpression:
     """
     if isinstance(var, int):
         return IntegerConst(var)
+    elif isinstance(var, str):
+        return Variable(var)
     else:
         if not isinstance(var, ArithExpression.__value__):
             raise TypeError(

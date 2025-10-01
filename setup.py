@@ -20,13 +20,19 @@ from string import ascii_lowercase
 
 # Compatibility with the original syntax.py
 Eq = CompType.EQUAL
+EQUAL = CompType.EQUAL
 Lt = CompType.LOWER_THAN
+LOWER_THAN = CompType.LOWER_THAN
 
 All = QuantifierType.FORALL
+FORALL = QuantifierType.FORALL
 Ex = QuantifierType.EXISTS
+EXISTS = QuantifierType.EXISTS
 
 Conj = BoolOpType.CONJ
+CONJ = BoolOpType.CONJ
 Disj = BoolOpType.DISJ
+DISJ = BoolOpType.DISJ
 
 ConstF = BoolConst
 ComparF = Comp
