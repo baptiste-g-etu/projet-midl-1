@@ -46,6 +46,9 @@ class LogicFormula:
     def __gt__(self, rhs: Any):
         raise SyntaxError("Cannot compare logical formulas")
 
+    def __eq__(self, rhs: Any):
+        raise SyntaxError("Cannot compare logical formulas")
+
     def __or__(self, rhs: Self):
         return BoolOp(self, BoolOpType.DISJ, into_logic_formula(rhs))
 
