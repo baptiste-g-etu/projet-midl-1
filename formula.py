@@ -8,9 +8,56 @@ from typing import Any, Self
 
 
 # Types which are arithmetic expressions (usually ArithExpressions combined with arithmetic operators)
-type ArithExpression = Variable | IntegerConst | ArithOp
+class ArithExpression:
+    def __lt__(self, rhs: Any):
+        return Comp(self, CompType.LOWER_THAN, rhs)
+
+    def __gt__(self, rhs: Self | int):
+        return Comp(into_arith_expr(rhs), CompType.LOWER_THAN, self)
+
+    # TODO lower equal ?
+
+    def __eq__(self, rhs: Self | int):  # type: ignore because __eq__ is supposed to always return a bool
+        return Comp(self, CompType.EQUAL, into_arith_expr(rhs))
+
+    def __add__(self, rhs: Self | int):
+        return ArithOp(self, ArithOpType.SUM, into_arith_expr(rhs))
+
+    def __radd__(self, lhs: Self | int):
+        return ArithOp(into_arith_expr(lhs), ArithOpType.SUM, self)
+
+    def __sub__(self, rhs: Self | int):
+        return ArithOp(self, ArithOpType.SUB, into_arith_expr(rhs))
+
+    def __rsub__(self, lhs: Self | int):
+        return ArithOp(into_arith_expr(lhs), ArithOpType.SUB, self)
+
+    def __mul__(self, rhs: Self | int):
+        return ArithOp(self, ArithOpType.PROD, into_arith_expr(rhs))
+
+    def __rmul__(self, lhs: Self | int):
+        return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
+
+
 # Types which output a logic formula (usually LogicFormulas combined with logic operators)
-type LogicFormula = Comp | Quantifier | BoolConst | BoolOp
+class LogicFormula:
+    def __lt__(self, rhs: Any):
+        raise SyntaxError("Cannot compare logical formulas")
+
+    def __gt__(self, rhs: Any):
+        raise SyntaxError("Cannot compare logical formulas")
+
+    def __or__(self, rhs: Self):
+        return BoolOp(self, BoolOpType.DISJ, into_logic_formula(rhs))
+
+    def __ror__(self, lhs: Self):
+        return BoolOp(into_logic_formula(lhs), BoolOpType.DISJ, self)
+
+    def __and__(self, rhs: Self):
+        return BoolOp(self, BoolOpType.CONJ, into_logic_formula(rhs))
+
+    def __rand__(self, lhs: Self):
+        return BoolOp(into_logic_formula(lhs), BoolOpType.CONJ, self)
 
 
 class BoolOpType(StrEnum):
@@ -19,7 +66,7 @@ class BoolOpType(StrEnum):
 
 
 @dataclass
-class BoolOp:
+class BoolOp(LogicFormula):
     formula1: LogicFormula
     boolop: BoolOpType
     formula2: LogicFormula
@@ -43,7 +90,7 @@ class ArithOpType(StrEnum):
 
 
 @dataclass
-class ArithOp:
+class ArithOp(ArithExpression):
     expr1: ArithExpression
     boolop: ArithOpType
     expr2: ArithExpression
@@ -51,28 +98,6 @@ class ArithOp:
     def __repr__(self) -> str:
         # TODO Add parenthesis
         return f"{self.expr1} {self.boolop} {self.expr2}"
-
-    def __lt__(self, rhs: Any):
-        return Comp(self, CompType.LOWER_THAN, rhs)
-    
-    def __add__(self, rhs: ArithExpression | int):
-        return ArithOp(self, ArithOpType.SUM, into_arith_expr(rhs))
-    
-    def __radd__(self, lhs: ArithExpression | int):
-        return ArithOp(into_arith_expr(lhs), ArithOpType.SUM, self)
-    
-    def __sub__(self, rhs: ArithExpression | int):
-        return ArithOp(self, ArithOpType.SUB, into_arith_expr(rhs))
-    
-    def __rsub__(self, lhs: ArithExpression | int):
-        return ArithOp(into_arith_expr(lhs), ArithOpType.SUB, self)
-    
-    def __mul__(self, rhs: ArithExpression | int):
-        return ArithOp(self, ArithOpType.PROD, into_arith_expr(rhs))
-    
-    def __rmul__(self, lhs: ArithExpression | int):
-        return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
-    # TODO Define __or__ and __and__ for the special case where a < b + 1 | 1 + c < d
 
 
 class CompType(StrEnum):
@@ -87,7 +112,7 @@ class CompType(StrEnum):
 
 
 @dataclass
-class Comp:
+class Comp(ArithExpression):
     expr1: ArithExpression
     comp: CompType
     expr2: ArithExpression
@@ -103,85 +128,30 @@ class Comp:
         return f"{self.expr1} {self.comp} {self.expr2}"
 
     # TODO Maybe implement a < b < c, for example as (a < b) and (b < c)
-    def __lt__(self, rhs: Any):
-        raise SyntaxError("Cannot compare comparisons")
-
-    def __gt__(self, rhs: Any):
-        raise SyntaxError("Cannot compare comparisons")
-
-    def __or__(self, rhs: LogicFormula) -> BoolOp:
-        return BoolOp(self, BoolOpType.DISJ, into_logic_formula(rhs))
-
-    def __ror__(self, lhs: LogicFormula) -> BoolOp:
-        return BoolOp(into_logic_formula(lhs), BoolOpType.DISJ, self)
-
-    def __and__(self, rhs: LogicFormula) -> LogicFormula:
-        return BoolOp(self, BoolOpType.CONJ, into_logic_formula(rhs))
-
-    def __rand__(self, lhs: LogicFormula) -> LogicFormula:
-        return BoolOp(into_logic_formula(lhs), BoolOpType.CONJ, self)
 
 
 @dataclass
-class Variable:
+class Variable(ArithExpression):
     name: str
 
     def __repr__(self) -> str:
         return self.name
 
-    def __add__(self, rhs: ArithExpression | int):
-        return ArithOp(self, ArithOpType.SUM, into_arith_expr(rhs))
-
-    def __radd__(self, lhs: ArithExpression | int):
-        return ArithOp(into_arith_expr(lhs), ArithOpType.SUM, self)
-
-    def __sub__(self, rhs: ArithExpression | int):
-        return ArithOp(self, ArithOpType.SUB, into_arith_expr(rhs))
-
-    def __rsub__(self, lhs: ArithExpression | int):
-        return ArithOp(into_arith_expr(lhs), ArithOpType.SUB, self)
-
-    def __mul__(self, rhs: ArithExpression | int):
-        return ArithOp(self, ArithOpType.PROD, into_arith_expr(rhs))
-
-    def __rmul__(self, lhs: ArithExpression | int):
-        return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
-
-    def __lt__(self, rhs:  ArithExpression | int) -> Comp:
-        return Comp(self, CompType.LOWER_THAN, into_arith_expr(rhs))
-
-    def __gt__(self, rhs: ArithExpression | int) -> Comp:
-        return Comp(into_arith_expr(rhs), CompType.LOWER_THAN, self)
-
-    # TODO lower equal ?
-
-    def __eq__(self, rhs: ArithExpression | int) -> Comp:  # type: ignore because __eq__ is supposed to always return a bool
-        return Comp(self, CompType.EQUAL, into_arith_expr(rhs))
-
 
 @dataclass
-class BoolConst:
+class BoolConst(LogicFormula):
     const: bool
 
     def __repr__(self) -> str:
         return "⊤" if self.const else "⊥"
 
-    def __lt__(self, rhs: Any):
-        raise SyntaxError("Cannot use comparison operators on boolean constants")
-
-    def __gt__(self, rhs: Any):
-        raise SyntaxError("Cannot use comparison operators on boolean constants")
-
 
 @dataclass
-class IntegerConst:
+class IntegerConst(ArithExpression):
     const: int
 
     def __repr__(self) -> str:
         return str(self.const)
-
-    def __lt__(self, rhs: Any):
-        return Comp(self, CompType.LOWER_THAN, rhs)
 
 
 class QuantifierType(StrEnum):
@@ -193,7 +163,7 @@ class QuantifierType(StrEnum):
 
 
 @dataclass
-class Quantifier:
+class Quantifier(LogicFormula):
     quantifier: QuantifierType
     variable: Variable
     formula: LogicFormula
@@ -201,12 +171,6 @@ class Quantifier:
     def __repr__(self) -> str:
         inner_is_quantif = isinstance(self.formula, Quantifier)
         return f"{self.quantifier}{self.variable}.{'' if inner_is_quantif else '('}{self.formula}{'' if inner_is_quantif else ')'}"
-
-    def __lt__(self, rhs: Any):
-        raise SyntaxError("Cannot use comparison operators on quantifiers")
-
-    def __gt__(self, rhs: Any):
-        raise SyntaxError("Cannot use comparison operators on quantifiers")
 
 
 @dataclass
@@ -284,7 +248,7 @@ def into_arith_expr(var: Any) -> ArithExpression:
     elif isinstance(var, str):
         return Variable(var)
     else:
-        if not isinstance(var, ArithExpression.__value__):
+        if not isinstance(var, ArithExpression):
             raise TypeError(
                 f"Cannot convert value of type {type(var)} into ArithExpression"
             )
@@ -300,7 +264,7 @@ def into_logic_formula(var: Any) -> LogicFormula:
     if isinstance(var, bool):
         return BoolConst(var)
     else:
-        if not isinstance(var, LogicFormula.__value__):
+        if not isinstance(var, LogicFormula):
             raise TypeError(
                 f"Cannot convert value of type {type(var)} into LogicFormula"
             )
