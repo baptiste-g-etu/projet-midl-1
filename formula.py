@@ -120,7 +120,7 @@ class CompType(StrEnum):
         return self
 
 
-class Comp(ArithExpression):
+class Comp(LogicFormula):
     def __init__(
         self, expr1: ArithExpression, comp: CompType, expr2: ArithExpression
     ) -> None:
