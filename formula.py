@@ -37,6 +37,9 @@ class ArithExpression:
     def __rmul__(self, lhs: Self | int):
         return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
 
+    def __repr_parenthesis__(self) -> str:
+        return f"({self})"
+
 
 # Types which output a logic formula (usually LogicFormulas combined with logic operators)
 class LogicFormula:
@@ -61,6 +64,9 @@ class LogicFormula:
     def __rand__(self, lhs: Self):
         return BoolOp(into_logic_formula(lhs), BoolOpType.CONJ, self)
 
+    def __repr_parenthesis__(self) -> str:
+        return f"({self})"
+
 
 class BoolOpType(StrEnum):
     CONJ = "∧"
@@ -79,8 +85,7 @@ class BoolOp(LogicFormula):
         self.formula2 = into_logic_formula(formula2)
 
     def __repr__(self) -> str:
-        # TODO Add parenthesis
-        return f"{self.formula1} {self.boolop} {self.formula2}"
+        return f"{self.formula1.__repr_parenthesis__()} {self.boolop} {self.formula2.__repr_parenthesis__()}"
 
     def __lt__(self, rhs: Any):
         raise SyntaxError("Cannot compare booleans")
@@ -110,9 +115,12 @@ class ArithOp(ArithExpression):
         self.boolop = boolop
         self.expr2 = into_arith_expr(expr2)
 
+    def __repr_parenthesis__(self) -> str:
+        return self.__repr__()
+
     def __repr__(self) -> str:
         # TODO Add parenthesis
-        return f"{self.expr1} {self.boolop} {self.expr2}"
+        return f"{self.expr1.__repr_parenthesis__()} {self.boolop} {self.expr2.__repr_parenthesis__()}"
 
 
 class CompType(StrEnum):
@@ -134,8 +142,11 @@ class Comp(LogicFormula):
         self.comp = comp
         self.expr2 = into_arith_expr(expr2)
 
+    def __repr_parenthesis__(self) -> str:
+        return self.__repr__()
+
     def __repr__(self) -> str:
-        return f"{self.expr1} {self.comp} {self.expr2}"
+        return f"{self.expr1.__repr_parenthesis__()} {self.comp} {self.expr2.__repr_parenthesis__()}"
 
     # TODO Maybe implement a < b < c, for example as (a < b) and (b < c)
 
@@ -143,6 +154,9 @@ class Comp(LogicFormula):
 class Variable(ArithExpression):
     def __init__(self, name: str) -> None:
         self.name = name
+
+    def __repr_parenthesis__(self) -> str:
+        return self.__repr__()
 
     def __repr__(self) -> str:
         return self.name
@@ -152,6 +166,9 @@ class BoolConst(LogicFormula):
     def __init__(self, const: bool) -> None:
         self.const = const
 
+    def __repr_parenthesis__(self) -> str:
+        return self.__repr__()
+
     def __repr__(self) -> str:
         return "⊤" if self.const else "⊥"
 
@@ -159,6 +176,9 @@ class BoolConst(LogicFormula):
 class IntegerConst(ArithExpression):
     def __init__(self, const: int) -> None:
         self.const = const
+
+    def __repr_parenthesis__(self) -> str:
+        return self.__repr__()
 
     def __repr__(self) -> str:
         return str(self.const)
@@ -186,17 +206,22 @@ class Quantifier(LogicFormula):
         self.variable = variable
         self.formula = into_logic_formula(formula)
 
+    def __repr_parenthesis__(self) -> str:
+        return self.__repr__()
+
     def __repr__(self) -> str:
-        inner_is_quantif = isinstance(self.formula, Quantifier)
-        return f"{self.quantifier}{self.variable}.{'' if inner_is_quantif else '('}{self.formula}{'' if inner_is_quantif else ')'}"
+        return f"{self.quantifier}{self.variable}.{self.formula.__repr_parenthesis__()}"
 
 
 class Not(LogicFormula):
     def __init__(self, formula: LogicFormula) -> None:
         self.formula = into_logic_formula(formula)
 
+    def __repr_parenthesis__(self) -> str:
+        return self.__repr__()
+
     def __repr__(self) -> str:
-        return f"¬{self.formula}"
+        return f"¬({self.formula.__repr_parenthesis__()})"
 
 
 class BoolOpBuilder:
