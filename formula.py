@@ -2,7 +2,6 @@
 Base types for the project.
 """
 
-from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Self
 
@@ -65,11 +64,13 @@ class BoolOpType(StrEnum):
     DISJ = "∨"
 
 
-@dataclass
 class BoolOp(LogicFormula):
-    formula1: LogicFormula
-    boolop: BoolOpType
-    formula2: LogicFormula
+    def __init__(
+        self, formula1: LogicFormula, boolop: BoolOpType, formula2: LogicFormula
+    ) -> None:
+        self.formula1 = into_logic_formula(formula1)
+        self.boolop = boolop
+        self.formula2 = into_logic_formula(formula2)
 
     def __repr__(self) -> str:
         # TODO Add parenthesis
@@ -89,11 +90,16 @@ class ArithOpType(StrEnum):
     # DIV = "/" # Division isn’t supported
 
 
-@dataclass
 class ArithOp(ArithExpression):
-    expr1: ArithExpression
-    boolop: ArithOpType
-    expr2: ArithExpression
+    def __init__(
+        self,
+        expr1: ArithExpression,
+        boolop: ArithOpType,
+        expr2: ArithExpression,
+    ):
+        self.expr1 = into_arith_expr(expr1)
+        self.boolop = boolop
+        self.expr2 = into_arith_expr(expr2)
 
     def __repr__(self) -> str:
         # TODO Add parenthesis
@@ -111,12 +117,7 @@ class CompType(StrEnum):
         return self
 
 
-@dataclass
 class Comp(ArithExpression):
-    expr1: ArithExpression
-    comp: CompType
-    expr2: ArithExpression
-
     def __init__(
         self, expr1: ArithExpression, comp: CompType, expr2: ArithExpression
     ) -> None:
@@ -130,25 +131,25 @@ class Comp(ArithExpression):
     # TODO Maybe implement a < b < c, for example as (a < b) and (b < c)
 
 
-@dataclass
 class Variable(ArithExpression):
-    name: str
+    def __init__(self, name: str) -> None:
+        self.name = name
 
     def __repr__(self) -> str:
         return self.name
 
 
-@dataclass
 class BoolConst(LogicFormula):
-    const: bool
+    def __init__(self, const: bool) -> None:
+        self.const = const
 
     def __repr__(self) -> str:
         return "⊤" if self.const else "⊥"
 
 
-@dataclass
 class IntegerConst(ArithExpression):
-    const: int
+    def __init__(self, const: int) -> None:
+        self.const = const
 
     def __repr__(self) -> str:
         return str(self.const)
@@ -162,36 +163,41 @@ class QuantifierType(StrEnum):
         return self
 
 
-@dataclass
 class Quantifier(LogicFormula):
-    quantifier: QuantifierType
-    variable: Variable
-    formula: LogicFormula
+    def __init__(
+        self,
+        quantifier: QuantifierType,
+        variable: Variable,
+        formula: LogicFormula,
+    ) -> None:
+        self.quantifier = quantifier
+        self.variable = variable
+        self.formula = into_logic_formula(formula)
 
     def __repr__(self) -> str:
         inner_is_quantif = isinstance(self.formula, Quantifier)
         return f"{self.quantifier}{self.variable}.{'' if inner_is_quantif else '('}{self.formula}{'' if inner_is_quantif else ')'}"
 
 
-@dataclass
-class Not:
-    formula: LogicFormula
+class Not(LogicFormula):
+    def __init__(self, formula: LogicFormula) -> None:
+        self.formula = into_logic_formula(formula)
 
     def __repr__(self) -> str:
         return f"¬{self.formula}"
 
 
-@dataclass
 class BoolOpBuilder:
-    op: BoolOpType
+    def __init__(self, op: BoolOpType) -> None:
+        self.op = op
 
     def __call__(self, formula1: LogicFormula, formula2: LogicFormula) -> BoolOp:
         return BoolOp(formula1, self.op, formula2)
 
 
-@dataclass
 class ArithOpBuilder:
-    op: ArithOpType
+    def __init__(self, op: ArithOpType) -> None:
+        self.op = op
 
     def __call__(self, formula1: ArithExpression, formula2: ArithExpression) -> ArithOp:
         return ArithOp(formula1, self.op, formula2)
@@ -229,9 +235,9 @@ class QuantifierBuilder:
         return new
 
 
-@dataclass
 class CompBuilder:
-    comp: CompType
+    def __init__(self, comp: CompType) -> None:
+        self.comp = comp
 
     def __call__(self, expr1: ArithExpression, expr2: ArithExpression) -> Comp:
         return Comp(expr1, self.comp, expr2)
