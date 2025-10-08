@@ -6,6 +6,31 @@ from enum import StrEnum
 from typing import Any, Self
 
 
+# Colors for colorful printing of formulas (derived from the Catppuccin palette - catppuccin.com)
+FAINTED = [
+    [255, 179, 199],  # Red
+    [252, 209, 182],  # Peach
+    [250, 229, 184],  # Yellow
+    [200, 237, 196],  # Green
+    # [190, 236, 244],  # Sky
+    [182, 209, 252],  # Blue
+    [214, 185, 249],  # Mauve
+    [244, 189, 230],  # Pink
+]
+NORMAL = [
+    [209, 0, 45],  # Red
+    [255, 94, 0],  # Peach
+    [222, 181, 0],  # Yellow
+    [29, 161, 0],  # Green
+    # [0, 165, 230],  # Sky
+    [0, 82, 245],  # Blue
+    [104, 0, 240],  # Mauve
+    [235, 0, 172],  # Pink
+]
+COLOR_RESET = "\x1b[39m"
+COLORING = True
+
+
 # Types which are arithmetic expressions (usually ArithExpressions combined with arithmetic operators)
 class ArithExpression:
     def __lt__(self, rhs: Any):
@@ -37,8 +62,13 @@ class ArithExpression:
     def __rmul__(self, lhs: Self | int):
         return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
 
-    def __repr_parenthesis__(self) -> str:
+    def __repr_parenthesis__(self):
         return f"({self})"
+
+    def __repr_colored_parenthesis__(self, level: int) -> str:
+        raise NotImplementedError(
+            f"__repr_colored_parenthesis__ not implemented for {self}"
+        )
 
 
 # Types which output a logic formula (usually LogicFormulas combined with logic operators)
@@ -64,8 +94,13 @@ class LogicFormula:
     def __rand__(self, lhs: Self):
         return BoolOp(into_logic_formula(lhs), BoolOpType.CONJ, self)
 
-    def __repr_parenthesis__(self) -> str:
+    def __repr_parenthesis__(self):
         return f"({self})"
+
+    def __repr_colored_parenthesis__(self, level: int) -> str:
+        raise NotImplementedError(
+            f"__repr_colored_parenthesis__ not implemented for {self}"
+        )
 
 
 class BoolOpType(StrEnum):
@@ -85,7 +120,13 @@ class BoolOp(LogicFormula):
         self.formula2 = into_logic_formula(formula2)
 
     def __repr__(self) -> str:
-        return f"{self.formula1.__repr_parenthesis__()} {self.boolop} {self.formula2.__repr_parenthesis__()}"
+        if COLORING:
+            return self.__repr_colored_parenthesis__(0)
+        else:
+            return f"{self.formula1.__repr_parenthesis__()} {self.boolop} {self.formula2.__repr_parenthesis__()}"
+
+    def __repr_colored_parenthesis__(self, level: int) -> str:
+        return f"{color_level(level, False)}({COLOR_RESET}{self.formula1.__repr_colored_parenthesis__(level + 1)} {color_level(level, False)}{self.boolop}{COLOR_RESET} {self.formula2.__repr_colored_parenthesis__(level + 1)}{color_level(level, False)}){COLOR_RESET}"
 
     def __lt__(self, rhs: Any):
         raise SyntaxError("Cannot compare booleans")
@@ -108,19 +149,24 @@ class ArithOp(ArithExpression):
     def __init__(
         self,
         expr1: ArithExpression,
-        boolop: ArithOpType,
+        arithop: ArithOpType,
         expr2: ArithExpression,
     ):
         self.expr1 = into_arith_expr(expr1)
-        self.boolop = boolop
+        self.arithop = arithop
         self.expr2 = into_arith_expr(expr2)
 
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
+    def __repr_colored_parenthesis__(self, level: int) -> str:
+        return f"{self.expr1.__repr_colored_parenthesis__(level)} {color_level(level, False)}{self.arithop}{COLOR_RESET} {self.expr2.__repr_colored_parenthesis__(level)}"
+
     def __repr__(self) -> str:
-        # TODO Add parenthesis
-        return f"{self.expr1.__repr_parenthesis__()} {self.boolop} {self.expr2.__repr_parenthesis__()}"
+        if COLORING:
+            return self.__repr_colored_parenthesis__(0)
+        else:
+            return f"{self.expr1.__repr_parenthesis__()} {self.arithop} {self.expr2.__repr_parenthesis__()}"
 
 
 class CompType(StrEnum):
@@ -145,8 +191,20 @@ class Comp(LogicFormula):
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
+    def __repr_colored_parenthesis__(self, level: int) -> str:
+        return f"{self.expr1.__repr_colored_parenthesis__(level)} {color_level(level, False)}{self.comp}{COLOR_RESET} {self.expr2.__repr_colored_parenthesis__(level)}"
+
     def __repr__(self) -> str:
-        return f"{self.expr1.__repr_parenthesis__()} {self.comp} {self.expr2.__repr_parenthesis__()}"
+        if COLORING:
+            return self.__repr_colored_parenthesis__(0)
+        else:
+            return f"{self.expr1.__repr_parenthesis__()} {self.comp} {self.expr2.__repr_parenthesis__()}"
+
+    def __bool__(self):
+        """
+        Bool implementation so Python isn’t messed up with eq mismatch.
+        """
+        return id(self.expr1) == id(self.expr2)
 
     # TODO Maybe implement a < b < c, for example as (a < b) and (b < c)
 
@@ -158,8 +216,14 @@ class Variable(ArithExpression):
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
+    def __repr_colored_parenthesis__(self, level: int):
+        return f"{color_level(level, True)}{self.name}{COLOR_RESET}"
+
     def __repr__(self) -> str:
-        return self.name
+        if COLORING:
+            return self.__repr_colored_parenthesis__(0)
+        else:
+            return self.name
 
 
 class BoolConst(LogicFormula):
@@ -169,8 +233,14 @@ class BoolConst(LogicFormula):
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
+    def __repr_colored_parenthesis__(self, level: int):
+        return f"{color_level(level, True)}{'⊤' if self.const else '⊥'}{COLOR_RESET}"
+
     def __repr__(self) -> str:
-        return "⊤" if self.const else "⊥"
+        if COLORING:
+            return self.__repr_colored_parenthesis__(0)
+        else:
+            return "⊤" if self.const else "⊥"
 
 
 class IntegerConst(ArithExpression):
@@ -180,8 +250,14 @@ class IntegerConst(ArithExpression):
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
+    def __repr_colored_parenthesis__(self, level: int):
+        return f"{color_level(level, True)}{self.const}{COLOR_RESET}"
+
     def __repr__(self) -> str:
-        return str(self.const)
+        if COLORING:
+            return self.__repr_colored_parenthesis__(0)
+        else:
+            return str(self.const)
 
 
 class QuantifierType(StrEnum):
@@ -209,8 +285,14 @@ class Quantifier(LogicFormula):
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
+    def __repr_colored_parenthesis__(self, level: int):
+        return f"{color_level(level, False)}{self.quantifier}{COLOR_RESET}{self.variable.__repr_colored_parenthesis__(level)}{color_level(level, False)}.{COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level + 1)}"
+
     def __repr__(self) -> str:
-        return f"{self.quantifier}{self.variable}.{self.formula.__repr_parenthesis__()}"
+        if COLORING:
+            return self.__repr_colored_parenthesis__(0)
+        else:
+            return f"{self.quantifier}{self.variable}.{self.formula.__repr_parenthesis__()}"
 
 
 class Not(LogicFormula):
@@ -220,8 +302,14 @@ class Not(LogicFormula):
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
+    def __repr_colored_parenthesis__(self, level: int):
+        return f"{color_level(level, False)}¬({COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level + 1)}{color_level(level, False)}){COLOR_RESET}"
+
     def __repr__(self) -> str:
-        return f"¬({self.formula.__repr_parenthesis__()})"
+        if COLORING:
+            return self.__repr_colored_parenthesis__(0)
+        else:
+            return f"¬({self.formula.__repr_parenthesis__()})"
 
 
 class BoolOpBuilder:
@@ -312,3 +400,15 @@ def into_logic_formula(var: Any) -> LogicFormula:
                 f"Cannot convert value of type {type(var)} into LogicFormula"
             )
         return var
+
+
+def color_level(level: int, fainted: bool):
+    """
+    Returns the appropriate colors for different levels of nested formulas.
+    """
+    if fainted:
+        r, g, b = FAINTED[level % len(FAINTED)]
+        return f"\x1b[38;2;{r};{g};{b}m"
+    else:
+        r, g, b = NORMAL[level % len(NORMAL)]
+        return f"\x1b[38;2;{r};{g};{b}m"
