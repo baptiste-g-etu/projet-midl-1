@@ -44,8 +44,14 @@ QuantifF = Quantifier
 eqf = CompBuilder(CompType.EQUAL)
 ltf = CompBuilder(CompType.LOWER_THAN)
 
-allq = QuantifierBuilder(QuantifierType.FORALL)
-exq = QuantifierBuilder(QuantifierType.EXISTS)
+
+def allq(var: Variable, formula: LogicFormula):
+    return Quantifier(QuantifierType.FORALL, var, formula)
+
+
+def exq(var: Variable, formula: LogicFormula):
+    return Quantifier(QuantifierType.EXISTS, var, formula)
+
 
 conj = BoolOpBuilder(BoolOpType.CONJ)
 disj = BoolOpBuilder(BoolOpType.DISJ)
