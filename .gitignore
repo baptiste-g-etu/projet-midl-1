@@ -1,6 +1,9 @@
 # Visual Studio Code
 .vscode/
 
+# To not make Mistera sad
+*.pdf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
