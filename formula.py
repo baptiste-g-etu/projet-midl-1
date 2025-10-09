@@ -5,7 +5,6 @@ Base types for the project.
 from enum import StrEnum
 from typing import Any, Self
 
-
 # Colors for colorful printing of formulas (from user's terminal)
 NORMAL = [35, 36, 34, 32, 33, 31]
 COLOR_RESET = "\x1b[39m"
@@ -260,7 +259,7 @@ class Quantifier(LogicFormula):
         formula: LogicFormula,
     ) -> None:
         self.quantifier = quantifier
-        self.variable = variable
+        self.variable = into_logical_variable(variable)
         self.formula = into_logic_formula(formula)
 
     def __repr_parenthesis__(self) -> str:
@@ -381,6 +380,22 @@ def into_logic_formula(var: Any) -> LogicFormula:
                 f"Cannot convert value of type {type(var)} into LogicFormula"
             )
         return var
+
+
+def into_logical_variable(var: Any) -> Variable:
+    # Converts a str into a Variable if needed
+    if isinstance(var, Variable):
+        return var
+    else:
+        if isinstance(var, str):
+            if var.isdigit():
+                
+                raise (
+                    f"You should not use the number : {var} as a variable name"
+                )
+            return Variable(var)
+        else:
+            raise TypeError(f"Cannot convert value of type {type(var)} into Variable")
 
 
 def color_level(level: int):
