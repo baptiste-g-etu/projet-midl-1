@@ -6,27 +6,8 @@ from enum import StrEnum
 from typing import Any, Self
 
 
-# Colors for colorful printing of formulas (derived from the Catppuccin palette - catppuccin.com)
-FAINTED = [
-    [255, 179, 199],  # Red
-    [252, 209, 182],  # Peach
-    [250, 229, 184],  # Yellow
-    [200, 237, 196],  # Green
-    # [190, 236, 244],  # Sky
-    [182, 209, 252],  # Blue
-    [214, 185, 249],  # Mauve
-    [244, 189, 230],  # Pink
-]
-NORMAL = [
-    [209, 0, 45],  # Red
-    [255, 94, 0],  # Peach
-    [222, 181, 0],  # Yellow
-    [29, 161, 0],  # Green
-    # [0, 165, 230],  # Sky
-    [0, 82, 245],  # Blue
-    [104, 0, 240],  # Mauve
-    [235, 0, 172],  # Pink
-]
+# Colors for colorful printing of formulas (from user's terminal)
+NORMAL = [35, 36, 34, 32, 33, 31]
 COLOR_RESET = "\x1b[39m"
 COLORING = True
 
@@ -126,7 +107,7 @@ class BoolOp(LogicFormula):
             return f"{self.formula1.__repr_parenthesis__()} {self.boolop} {self.formula2.__repr_parenthesis__()}"
 
     def __repr_colored_parenthesis__(self, level: int) -> str:
-        return f"{color_level(level, False)}({COLOR_RESET}{self.formula1.__repr_colored_parenthesis__(level + 1)} {color_level(level, False)}{self.boolop}{COLOR_RESET} {self.formula2.__repr_colored_parenthesis__(level + 1)}{color_level(level, False)}){COLOR_RESET}"
+        return f"{color_level(level)}({COLOR_RESET}{self.formula1.__repr_colored_parenthesis__(level + 1)} {color_level(level)}{self.boolop}{COLOR_RESET} {self.formula2.__repr_colored_parenthesis__(level + 1)}{color_level(level)}){COLOR_RESET}"
 
     def __lt__(self, rhs: Any):
         raise SyntaxError("Cannot compare booleans")
@@ -160,7 +141,7 @@ class ArithOp(ArithExpression):
         return self.__repr__()
 
     def __repr_colored_parenthesis__(self, level: int) -> str:
-        return f"{self.expr1.__repr_colored_parenthesis__(level)} {color_level(level, False)}{self.arithop}{COLOR_RESET} {self.expr2.__repr_colored_parenthesis__(level)}"
+        return f"{self.expr1.__repr_colored_parenthesis__(level)} {color_level(level)}{self.arithop}{COLOR_RESET} {self.expr2.__repr_colored_parenthesis__(level)}"
 
     def __repr__(self) -> str:
         if COLORING:
@@ -192,7 +173,7 @@ class Comp(LogicFormula):
         return self.__repr__()
 
     def __repr_colored_parenthesis__(self, level: int) -> str:
-        return f"{self.expr1.__repr_colored_parenthesis__(level)} {color_level(level, False)}{self.comp}{COLOR_RESET} {self.expr2.__repr_colored_parenthesis__(level)}"
+        return f"{self.expr1.__repr_colored_parenthesis__(level)} {color_level(level)}{self.comp}{COLOR_RESET} {self.expr2.__repr_colored_parenthesis__(level)}"
 
     def __repr__(self) -> str:
         if COLORING:
@@ -217,7 +198,7 @@ class Variable(ArithExpression):
         return self.__repr__()
 
     def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level, True)}{self.name}{COLOR_RESET}"
+        return f"{color_level(level)}{self.name}{COLOR_RESET}"
 
     def __repr__(self) -> str:
         if COLORING:
@@ -234,7 +215,7 @@ class BoolConst(LogicFormula):
         return self.__repr__()
 
     def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level, True)}{'⊤' if self.const else '⊥'}{COLOR_RESET}"
+        return f"{color_level(level)}{'⊤' if self.const else '⊥'}{COLOR_RESET}"
 
     def __repr__(self) -> str:
         if COLORING:
@@ -251,7 +232,7 @@ class IntegerConst(ArithExpression):
         return self.__repr__()
 
     def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level, True)}{self.const}{COLOR_RESET}"
+        return f"{color_level(level)}{self.const}{COLOR_RESET}"
 
     def __repr__(self) -> str:
         if COLORING:
@@ -286,7 +267,7 @@ class Quantifier(LogicFormula):
         return self.__repr__()
 
     def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level, False)}{self.quantifier}{COLOR_RESET}{self.variable.__repr_colored_parenthesis__(level)}{color_level(level, False)}.{COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level + 1)}"
+        return f"{color_level(level)}{self.quantifier}{COLOR_RESET}{self.variable.__repr_colored_parenthesis__(level)}{color_level(level)}.{COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level)}"
 
     def __repr__(self) -> str:
         if COLORING:
@@ -303,7 +284,7 @@ class Not(LogicFormula):
         return self.__repr__()
 
     def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level, False)}¬({COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level + 1)}{color_level(level, False)}){COLOR_RESET}"
+        return f"{color_level(level)}¬({COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level + 1)}{color_level(level)}){COLOR_RESET}"
 
     def __repr__(self) -> str:
         if COLORING:
@@ -365,7 +346,7 @@ class CompBuilder:
         self.comp = comp
 
     def __call__(self, expr1: ArithExpression, expr2: ArithExpression) -> Comp:
-        return Comp(expr1, self.comp, expr2)
+        return Comp(into_arith_expr(expr1), self.comp, into_arith_expr(expr2))
 
 
 def into_arith_expr(var: Any) -> ArithExpression:
@@ -402,13 +383,8 @@ def into_logic_formula(var: Any) -> LogicFormula:
         return var
 
 
-def color_level(level: int, fainted: bool):
+def color_level(level: int):
     """
     Returns the appropriate colors for different levels of nested formulas.
     """
-    if fainted:
-        r, g, b = FAINTED[level % len(FAINTED)]
-        return f"\x1b[38;2;{r};{g};{b}m"
-    else:
-        r, g, b = NORMAL[level % len(NORMAL)]
-        return f"\x1b[38;2;{r};{g};{b}m"
+    return f"\x1b[{NORMAL[level % len(NORMAL)]}m"

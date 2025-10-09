@@ -15,6 +15,7 @@ from formula import (
     QuantifierBuilder,
     QuantifierType,
     Variable,
+    into_logic_formula,
 )
 from string import ascii_lowercase
 
@@ -46,11 +47,11 @@ ltf = CompBuilder(CompType.LOWER_THAN)
 
 
 def allq(var: Variable, formula: LogicFormula):
-    return Quantifier(QuantifierType.FORALL, var, formula)
+    return Quantifier(QuantifierType.FORALL, var, into_logic_formula(formula))
 
 
 def exq(var: Variable, formula: LogicFormula):
-    return Quantifier(QuantifierType.EXISTS, var, formula)
+    return Quantifier(QuantifierType.EXISTS, var, into_logic_formula(formula))
 
 
 conj = BoolOpBuilder(BoolOpType.CONJ)
@@ -58,7 +59,7 @@ disj = BoolOpBuilder(BoolOpType.DISJ)
 
 
 def impl(formula1: LogicFormula, formula2: LogicFormula) -> BoolOp:
-    return disj(Not(formula1), formula2)
+    return disj(Not(into_logic_formula(formula1)), into_logic_formula(formula2))
 
 
 # Assumptions of the second part made from the original syntax.py
