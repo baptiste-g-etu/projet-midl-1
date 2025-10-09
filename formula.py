@@ -389,8 +389,8 @@ def into_logical_variable(var: Any) -> Variable:
     else:
         if isinstance(var, str):
             if var.isdigit():
-                
-                raise (
+                # Should we keep that ?
+                raise TypeError(
                     f"You should not use the number : {var} as a variable name"
                 )
             return Variable(var)
