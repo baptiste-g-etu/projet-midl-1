@@ -59,6 +59,9 @@ class ArithExpression:
             f"__repr_colored_parenthesis__ not implemented for {self}"
         )
 
+    def is_syntaxically_eq(self, rhs: Any) -> bool:
+        raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
+
 
 # Types which output a logic formula (usually LogicFormulas combined with logic operators)
 class LogicFormula:
@@ -91,6 +94,9 @@ class LogicFormula:
             f"__repr_colored_parenthesis__ not implemented for {self}"
         )
 
+    def is_syntaxically_eq(self, rhs: Any) -> bool:
+        raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
+
 
 class BoolOpType(StrEnum):
     CONJ = "∧"
@@ -107,6 +113,13 @@ class BoolOp(LogicFormula):
         self.formula1 = into_logic_formula(formula1)
         self.boolop = boolop
         self.formula2 = into_logic_formula(formula2)
+
+    def is_syntaxically_eq(self, rhs: Self) -> bool:
+        return (
+            self.formula1.is_syntaxically_eq(rhs.formula1)
+            and self.boolop == rhs.boolop
+            and self.formula2.is_syntaxically_eq(rhs.formula2)
+        )
 
     def __repr__(self) -> str:
         if COLORING:
@@ -145,6 +158,13 @@ class ArithOp(ArithExpression):
         self.arithop = arithop
         self.expr2 = into_arith_expr(expr2)
 
+    def is_syntaxically_eq(self, rhs: Self) -> bool:
+        return (
+            self.expr1.is_syntaxically_eq(rhs.expr1)
+            and self.arithop == rhs.arithop
+            and self.expr2.is_syntaxically_eq(rhs.expr2)
+        )
+
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
@@ -177,6 +197,13 @@ class Comp(LogicFormula):
         self.comp = comp
         self.expr2 = into_arith_expr(expr2)
 
+    def is_syntaxically_eq(self, rhs: Self) -> bool:
+        return (
+            self.expr1.is_syntaxically_eq(rhs.expr1)
+            and self.comp == rhs.comp
+            and self.expr2.is_syntaxically_eq(rhs.expr2)
+        )
+
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
@@ -193,7 +220,7 @@ class Comp(LogicFormula):
         """
         Bool implementation so Python isn’t messed up with eq mismatch.
         """
-        return id(self.expr1) == id(self.expr2)
+        return self.expr1.is_syntaxically_eq(self.expr2)
 
     # TODO Maybe implement a < b < c, for example as (a < b) and (b < c)
 
@@ -201,6 +228,9 @@ class Comp(LogicFormula):
 class Variable(ArithExpression):
     def __init__(self, name: str) -> None:
         self.name = name
+
+    def is_syntaxically_eq(self, rhs: Self) -> bool:
+        return self.name == rhs.name
 
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
@@ -219,6 +249,9 @@ class BoolConst(LogicFormula):
     def __init__(self, const: bool) -> None:
         self.const = const
 
+    def is_syntaxically_eq(self, rhs: Self) -> bool:
+        return self.const == rhs.const
+
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
 
@@ -235,6 +268,9 @@ class BoolConst(LogicFormula):
 class IntegerConst(ArithExpression):
     def __init__(self, const: int) -> None:
         self.const = const
+
+    def is_syntaxically_eq(self, rhs: Self) -> bool:
+        return self.const == rhs.const
 
     def __repr_parenthesis__(self) -> str:
         return self.__repr__()
