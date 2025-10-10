@@ -259,7 +259,7 @@ class Quantifier(LogicFormula):
         formula: LogicFormula,
     ) -> None:
         self.quantifier = quantifier
-        self.variable = into_logical_variable(variable)
+        self.variable = into_variable(variable)
         self.formula = into_logic_formula(formula)
 
     def __repr_parenthesis__(self) -> str:
@@ -382,20 +382,21 @@ def into_logic_formula(var: Any) -> LogicFormula:
         return var
 
 
-def into_logical_variable(var: Any) -> Variable:
-    # Converts a str into a Variable if needed
+def into_variable(var: Any) -> Variable:
+    """
+    Converts a str into a Variable if needed. Also reject to cast a number as a variable
+    """
     if isinstance(var, Variable):
         return var
+    elif isinstance(var, str):
+        if var.isdigit():
+        # Should we keep that ?
+            raise TypeError(
+                f"You should not use the number : {var} as a variable name"
+            )
+        return Variable(var)
     else:
-        if isinstance(var, str):
-            if var.isdigit():
-                # Should we keep that ?
-                raise TypeError(
-                    f"You should not use the number : {var} as a variable name"
-                )
-            return Variable(var)
-        else:
-            raise TypeError(f"Cannot convert value of type {type(var)} into Variable")
+        raise TypeError(f"Cannot convert value of type {type(var)} into Variable")
 
 
 def color_level(level: int):
