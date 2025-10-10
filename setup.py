@@ -9,7 +9,7 @@ from formula import (
     Comp,
     CompBuilder,
     CompType,
-    LogicFormula,
+    IntoLogicFormula,
     Not,
     Quantifier,
     QuantifierBuilder,
@@ -46,11 +46,11 @@ eqf = CompBuilder(CompType.EQUAL)
 ltf = CompBuilder(CompType.LOWER_THAN)
 
 
-def allq(var: Variable, formula: LogicFormula):
+def allq(var: Variable, formula: IntoLogicFormula):
     return Quantifier(QuantifierType.FORALL, var, into_logic_formula(formula))
 
 
-def exq(var: Variable, formula: LogicFormula):
+def exq(var: Variable, formula: IntoLogicFormula):
     return Quantifier(QuantifierType.EXISTS, var, into_logic_formula(formula))
 
 
@@ -58,7 +58,7 @@ conj = BoolOpBuilder(BoolOpType.CONJ)
 disj = BoolOpBuilder(BoolOpType.DISJ)
 
 
-def impl(formula1: LogicFormula, formula2: LogicFormula) -> BoolOp:
+def impl(formula1: IntoLogicFormula, formula2: IntoLogicFormula) -> BoolOp:
     return disj(Not(into_logic_formula(formula1)), into_logic_formula(formula2))
 
 

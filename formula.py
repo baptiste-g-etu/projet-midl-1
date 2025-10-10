@@ -10,36 +10,45 @@ NORMAL = [35, 36, 34, 32, 33, 31]
 COLOR_RESET = "\x1b[39m"
 COLORING = True
 
+# Types that can be converted into an ArithExpression
+type IntoArithExpression = ArithExpression | int | str
+
+# Types that can be converted into a LogicFormula
+type IntoLogicFormula = LogicFormula | bool
+
+# Types that can be converted into a Variable
+type IntoVariable = Variable | str
+
 
 # Types which are arithmetic expressions (usually ArithExpressions combined with arithmetic operators)
 class ArithExpression:
     def __lt__(self, rhs: Any):
         return Comp(self, CompType.LOWER_THAN, rhs)
 
-    def __gt__(self, rhs: Self | int):
+    def __gt__(self, rhs: IntoArithExpression):
         return Comp(into_arith_expr(rhs), CompType.LOWER_THAN, self)
 
     # TODO lower equal ?
 
-    def __eq__(self, rhs: Self | int):  # type: ignore because __eq__ is supposed to always return a bool
+    def __eq__(self, rhs: IntoArithExpression):  # type: ignore because __eq__ is supposed to always return a bool
         return Comp(self, CompType.EQUAL, into_arith_expr(rhs))
 
-    def __add__(self, rhs: Self | int):
+    def __add__(self, rhs: IntoArithExpression):
         return ArithOp(self, ArithOpType.SUM, into_arith_expr(rhs))
 
-    def __radd__(self, lhs: Self | int):
+    def __radd__(self, lhs: IntoArithExpression):
         return ArithOp(into_arith_expr(lhs), ArithOpType.SUM, self)
 
-    def __sub__(self, rhs: Self | int):
+    def __sub__(self, rhs: IntoArithExpression):
         return ArithOp(self, ArithOpType.SUB, into_arith_expr(rhs))
 
-    def __rsub__(self, lhs: Self | int):
+    def __rsub__(self, lhs: IntoArithExpression):
         return ArithOp(into_arith_expr(lhs), ArithOpType.SUB, self)
 
-    def __mul__(self, rhs: Self | int):
+    def __mul__(self, rhs: IntoArithExpression):
         return ArithOp(self, ArithOpType.PROD, into_arith_expr(rhs))
 
-    def __rmul__(self, lhs: Self | int):
+    def __rmul__(self, lhs: IntoArithExpression):
         return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
 
     def __repr_parenthesis__(self):
@@ -62,16 +71,16 @@ class LogicFormula:
     def __eq__(self, rhs: Any):
         raise SyntaxError("Cannot compare logical formulas")
 
-    def __or__(self, rhs: Self):
+    def __or__(self, rhs: IntoLogicFormula):
         return BoolOp(self, BoolOpType.DISJ, into_logic_formula(rhs))
 
-    def __ror__(self, lhs: Self):
+    def __ror__(self, lhs: IntoLogicFormula):
         return BoolOp(into_logic_formula(lhs), BoolOpType.DISJ, self)
 
-    def __and__(self, rhs: Self):
+    def __and__(self, rhs: IntoLogicFormula):
         return BoolOp(self, BoolOpType.CONJ, into_logic_formula(rhs))
 
-    def __rand__(self, lhs: Self):
+    def __rand__(self, lhs: IntoLogicFormula):
         return BoolOp(into_logic_formula(lhs), BoolOpType.CONJ, self)
 
     def __repr_parenthesis__(self):
@@ -93,7 +102,7 @@ class BoolOpType(StrEnum):
 
 class BoolOp(LogicFormula):
     def __init__(
-        self, formula1: LogicFormula, boolop: BoolOpType, formula2: LogicFormula
+        self, formula1: IntoLogicFormula, boolop: BoolOpType, formula2: IntoLogicFormula
     ) -> None:
         self.formula1 = into_logic_formula(formula1)
         self.boolop = boolop
@@ -128,9 +137,9 @@ class ArithOpType(StrEnum):
 class ArithOp(ArithExpression):
     def __init__(
         self,
-        expr1: ArithExpression,
+        expr1: IntoArithExpression,
         arithop: ArithOpType,
-        expr2: ArithExpression,
+        expr2: IntoArithExpression,
     ):
         self.expr1 = into_arith_expr(expr1)
         self.arithop = arithop
@@ -162,7 +171,7 @@ class CompType(StrEnum):
 
 class Comp(LogicFormula):
     def __init__(
-        self, expr1: ArithExpression, comp: CompType, expr2: ArithExpression
+        self, expr1: IntoArithExpression, comp: CompType, expr2: IntoArithExpression
     ) -> None:
         self.expr1 = into_arith_expr(expr1)
         self.comp = comp
@@ -255,8 +264,8 @@ class Quantifier(LogicFormula):
     def __init__(
         self,
         quantifier: QuantifierType,
-        variable: Variable,
-        formula: LogicFormula,
+        variable: IntoVariable,
+        formula: IntoLogicFormula,
     ) -> None:
         self.quantifier = quantifier
         self.variable = into_variable(variable)
@@ -276,7 +285,7 @@ class Quantifier(LogicFormula):
 
 
 class Not(LogicFormula):
-    def __init__(self, formula: LogicFormula) -> None:
+    def __init__(self, formula: IntoLogicFormula) -> None:
         self.formula = into_logic_formula(formula)
 
     def __repr_parenthesis__(self) -> str:
@@ -344,7 +353,7 @@ class CompBuilder:
     def __init__(self, comp: CompType) -> None:
         self.comp = comp
 
-    def __call__(self, expr1: ArithExpression, expr2: ArithExpression) -> Comp:
+    def __call__(self, expr1: IntoArithExpression, expr2: IntoArithExpression) -> Comp:
         return Comp(into_arith_expr(expr1), self.comp, into_arith_expr(expr2))
 
 
@@ -390,10 +399,8 @@ def into_variable(var: Any) -> Variable:
         return var
     elif isinstance(var, str):
         if var.isdigit():
-        # Should we keep that ?
-            raise TypeError(
-                f"You should not use the number : {var} as a variable name"
-            )
+            # Should we keep that ?
+            raise TypeError(f"You should not use the number : {var} as a variable name")
         return Variable(var)
     else:
         raise TypeError(f"Cannot convert value of type {type(var)} into Variable")
