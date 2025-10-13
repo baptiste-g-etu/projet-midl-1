@@ -59,6 +59,9 @@ class ArithExpression:
             f"__repr_colored_parenthesis__ not implemented for {self}"
         )
 
+    def __contains__(self, variable: "Variable") -> bool:
+        raise NotImplementedError(f"__contains__ not implemented for {self}")
+
     def is_syntaxically_eq(self, rhs: Any) -> bool:
         raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
 
@@ -93,6 +96,9 @@ class LogicFormula:
         raise NotImplementedError(
             f"__repr_colored_parenthesis__ not implemented for {self}"
         )
+
+    def __contains__(self, variable: "Variable") -> bool:
+        raise NotImplementedError(f"__contains__ not implemented for {self}")
 
     def is_syntaxically_eq(self, rhs: Any) -> bool:
         raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
@@ -129,6 +135,9 @@ class BoolOp(LogicFormula):
 
     def __repr_colored_parenthesis__(self, level: int) -> str:
         return f"{color_level(level)}({COLOR_RESET}{self.formula1.__repr_colored_parenthesis__(level + 1)} {color_level(level)}{self.boolop}{COLOR_RESET} {self.formula2.__repr_colored_parenthesis__(level + 1)}{color_level(level)}){COLOR_RESET}"
+
+    def __contains__(self, variable: "Variable") -> bool:
+        return variable in self.formula1 or variable in self.formula2
 
     def __lt__(self, rhs: Any):
         raise SyntaxError("Cannot compare booleans")
@@ -170,6 +179,9 @@ class ArithOp(ArithExpression):
 
     def __repr_colored_parenthesis__(self, level: int) -> str:
         return f"{self.expr1.__repr_colored_parenthesis__(level)} {color_level(level)}{self.arithop}{COLOR_RESET} {self.expr2.__repr_colored_parenthesis__(level)}"
+
+    def __contains__(self, variable: "Variable") -> bool:
+        return variable in self.expr1 or variable in self.expr2
 
     def __repr__(self) -> str:
         if COLORING:
@@ -216,6 +228,9 @@ class Comp(LogicFormula):
         else:
             return f"{self.expr1.__repr_parenthesis__()} {self.comp} {self.expr2.__repr_parenthesis__()}"
 
+    def __contains__(self, variable: "Variable") -> bool:
+        return variable in self.expr1 or variable in self.expr2
+
     def __bool__(self):
         """
         Bool implementation so Python isn’t messed up with eq mismatch.
@@ -238,6 +253,9 @@ class Variable(ArithExpression):
     def __repr_colored_parenthesis__(self, level: int):
         return f"{color_level(level)}{self.name}{COLOR_RESET}"
 
+    def __contains__(self, variable: Self) -> bool:
+        return variable.name == self.name
+
     def __repr__(self) -> str:
         if COLORING:
             return self.__repr_colored_parenthesis__(0)
@@ -258,6 +276,9 @@ class BoolConst(LogicFormula):
     def __repr_colored_parenthesis__(self, level: int):
         return f"{color_level(level)}{'⊤' if self.const else '⊥'}{COLOR_RESET}"
 
+    def __contains__(self, variable: Variable) -> bool:
+        return False
+
     def __repr__(self) -> str:
         if COLORING:
             return self.__repr_colored_parenthesis__(0)
@@ -277,6 +298,9 @@ class IntegerConst(ArithExpression):
 
     def __repr_colored_parenthesis__(self, level: int):
         return f"{color_level(level)}{self.const}{COLOR_RESET}"
+
+    def __contains__(self, variable: Variable) -> bool:
+        return False
 
     def __repr__(self) -> str:
         if COLORING:
@@ -313,6 +337,10 @@ class Quantifier(LogicFormula):
     def __repr_colored_parenthesis__(self, level: int):
         return f"{color_level(level)}{self.quantifier}{COLOR_RESET}{self.variable.__repr_colored_parenthesis__(level)}{color_level(level)}.{COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level)}"
 
+    def __contains__(self, variable: Variable) -> bool:
+        # TODO self.variable is in the formula ???
+        return variable in self.formula
+
     def __repr__(self) -> str:
         if COLORING:
             return self.__repr_colored_parenthesis__(0)
@@ -329,6 +357,9 @@ class Not(LogicFormula):
 
     def __repr_colored_parenthesis__(self, level: int):
         return f"{color_level(level)}¬({COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level + 1)}{color_level(level)}){COLOR_RESET}"
+
+    def __contains__(self, variable: "Variable") -> bool:
+        return variable in self.formula
 
     def __repr__(self) -> str:
         if COLORING:
