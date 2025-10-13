@@ -1,4 +1,5 @@
 from formula import (
+    ArithExpression,  # noqa: F401
     ArithOp,
     ArithOpBuilder,
     ArithOpType,
@@ -10,6 +11,8 @@ from formula import (
     CompBuilder,
     CompType,
     IntoLogicFormula,
+    IntoVariable,
+    LogicFormula,  # noqa: F401
     Not,
     Quantifier,
     QuantifierBuilder,
@@ -17,7 +20,8 @@ from formula import (
     Variable,
     into_logic_formula,
 )
-from string import ascii_lowercase
+import string
+
 
 
 # Compatibility with the original syntax.py
@@ -46,12 +50,12 @@ eqf = CompBuilder(CompType.EQUAL)
 ltf = CompBuilder(CompType.LOWER_THAN)
 
 
-def allq(var: Variable, formula: IntoLogicFormula):
-    return Quantifier(QuantifierType.FORALL, var, into_logic_formula(formula))
+def allq(var: IntoVariable, formula: IntoLogicFormula):
+    return Quantifier(QuantifierType.FORALL, var, formula)
 
 
-def exq(var: Variable, formula: IntoLogicFormula):
-    return Quantifier(QuantifierType.EXISTS, var, into_logic_formula(formula))
+def exq(var: IntoVariable, formula: IntoLogicFormula):
+    return Quantifier(QuantifierType.EXISTS, var, formula)
 
 
 conj = BoolOpBuilder(BoolOpType.CONJ)
@@ -59,7 +63,7 @@ disj = BoolOpBuilder(BoolOpType.DISJ)
 
 
 def impl(formula1: IntoLogicFormula, formula2: IntoLogicFormula) -> BoolOp:
-    return disj(Not(into_logic_formula(formula1)), into_logic_formula(formula2))
+    return disj(Not(formula1), formula2)
 
 
 # Assumptions of the second part made from the original syntax.py
@@ -81,5 +85,5 @@ true = BoolConst(True)
 false = BoolConst(False)
 
 # Define all ascii lowercase letters as variables
-for char in ascii_lowercase:
+for char in string.ascii_lowercase:
     globals()[char] = Variable(char)

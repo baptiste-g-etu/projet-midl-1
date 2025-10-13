@@ -15,8 +15,8 @@ print(allq("x1",allq(y,allq(z,exq(u,impl(conj(ltf(x, y), ltf(x, z)),conj(ltf(y, 
 f = conj(ConstF(True), ConstF(False))
 print(f)
 
-print(f"After dual(): {map_formula(f, dual)}")
-print(f"dual(not(f)): {map_formula(Not(f), dual)}")
+print(f"After dual(): {dual(f)}")
+print(f"dual(not(f)): {dual(Not(f))}")
 #print("Dual with a quantifier (should raise an error):")
 #map_formula(allq("x", f), dual)
 

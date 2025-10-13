@@ -3,7 +3,7 @@ Base types for the project.
 """
 
 from enum import StrEnum
-from typing import Any, Self
+from typing import Any, Callable, Self
 
 # Colors for colorful printing of formulas (from user's terminal)
 NORMAL = [35, 36, 34, 32, 33, 31]
@@ -103,6 +103,9 @@ class LogicFormula:
     def is_syntaxically_eq(self, rhs: Any) -> bool:
         raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
 
+    def logical_map(self, fn: Callable[[Self], Self]) -> Self:
+        raise NotImplementedError(f"map not implemented for {self}")
+
 
 class BoolOpType(StrEnum):
     CONJ = "∧"
@@ -144,6 +147,15 @@ class BoolOp(LogicFormula):
 
     def __gt__(self, rhs: Any):
         raise SyntaxError("Cannot compare booleans")
+
+    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+        return fn(
+            BoolOp(
+                self.formula1.logical_map(fn),
+                self.boolop,
+                self.formula2.logical_map(fn),
+            )
+        )
 
 
 class ArithOpType(StrEnum):
@@ -237,6 +249,9 @@ class Comp(LogicFormula):
         """
         return self.expr1.is_syntaxically_eq(self.expr2)
 
+    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+        return fn(self)
+
     # TODO Maybe implement a < b < c, for example as (a < b) and (b < c)
 
 
@@ -284,6 +299,9 @@ class BoolConst(LogicFormula):
             return self.__repr_colored_parenthesis__(0)
         else:
             return "⊤" if self.const else "⊥"
+
+    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+        return fn(self)
 
 
 class IntegerConst(ArithExpression):
@@ -347,6 +365,11 @@ class Quantifier(LogicFormula):
         else:
             return f"{self.quantifier}{self.variable}.{self.formula.__repr_parenthesis__()}"
 
+    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+        return fn(
+            Quantifier(self.quantifier, self.variable, self.formula.logical_map(fn))
+        )
+
 
 class Not(LogicFormula):
     def __init__(self, formula: IntoLogicFormula) -> None:
@@ -367,12 +390,15 @@ class Not(LogicFormula):
         else:
             return f"¬({self.formula.__repr_parenthesis__()})"
 
+    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+        return fn(Not(self.formula.logical_map(fn)))
+
 
 class BoolOpBuilder:
     def __init__(self, op: BoolOpType) -> None:
         self.op = op
 
-    def __call__(self, formula1: LogicFormula, formula2: LogicFormula) -> BoolOp:
+    def __call__(self, formula1: IntoLogicFormula, formula2: IntoLogicFormula) -> BoolOp:
         return BoolOp(formula1, self.op, formula2)
 
 
