@@ -37,7 +37,7 @@ def map_formula(formula: LogicFormula, fn: Callable[[LogicFormula], LogicFormula
 # Used to debug map_formula
 def dual(formula: LogicFormula) -> LogicFormula:
     # function sent to map_formula
-    def swap_and_or(node):
+    def swap_and_or(node : LogicFormula):
         if isinstance(node, BoolOp):
             new_op = BoolOpType.DISJ if node.boolop == BoolOpType.CONJ else BoolOpType.CONJ
             
@@ -52,7 +52,7 @@ def swap_quantifiers(formula: LogicFormula) -> LogicFormula:
     """
     Swap all quantifiers in the formula: FORALL <-> EXISTS
     """
-    def swap_q(node):
+    def swap_q(node : LogicFormula):
         if isinstance(node, Quantifier):
             new_q = QuantifierType.EXISTS if node.quantifier == QuantifierType.FORALL else QuantifierType.FORALL
             return Quantifier(new_q, node.variable, node.formula)
