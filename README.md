@@ -49,7 +49,7 @@ Les opérateurs listés ici ne sont que ceux explicitement définis dans `setup.
 | Opérateur                   | Raccourci conseillé                   |                    Type de l’argument                    |                                           Type de retour |
 | --------------------------- | ------------------------------------- | :------------------------------------------------------: | -------------------------------------------------------: |
 | `ConstF(b)`, `BoolConst(b)` | `true`, `false`                       |                 Booléen Python (`bool`)                  |                        Constante booléenne (`BoolConst`) |
-| `NotF(ilf)`, `Not(ilf)`     | `~ilf`                                | Type convertible en formule logique (`IntoLogicFormula`) |                      Négation de formule logique (`Not`) |
+| `NotF(ilf)`, `Not(ilf)`     | $\lnot$`ilf`                                | Type convertible en formule logique (`IntoLogicFormula`) |                      Négation de formule logique (`Not`) |
 | `Variable(v)`               | `a`, `b`, `c`, `d`, …                 |      Type convertible en variable (`IntoVariable`)       |                                    Variable (`Variable`) |
 | `CompBuilder(ct)`           | `eqf`, `ltf`, `==`, `<`               |             Type de comparaison (`CompType`)             |              Constructeur de comparaison (`CompBuilder`) |
 | `BoolOpBuilder(bt)`         | `conj`, `disj`, `&`, `\|`, `>>`, `<<` |        Type d’opération booléenne (`BoolOpType`)         |     Constructeur d’opération booléenne (`BoolOpBuilder`) |
