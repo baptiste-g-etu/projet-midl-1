@@ -18,10 +18,8 @@ from formula import (
     QuantifierBuilder,
     QuantifierType,
     Variable,
-    into_logic_formula,
 )
 import string
-
 
 
 # Compatibility with the original syntax.py
@@ -81,8 +79,8 @@ prod = ArithOpBuilder(ArithOpType.PROD)
 forall = QuantifierBuilder(QuantifierType.FORALL)
 exists = QuantifierBuilder(QuantifierType.EXISTS)
 
-true = BoolConst(True)
-false = BoolConst(False)
+true = top = BoolConst(True)
+false = bot = BoolConst(False)
 
 # Define all ascii lowercase letters as variables
 for char in string.ascii_lowercase:

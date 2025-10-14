@@ -68,6 +68,18 @@ class ArithExpression:
 
 # Types which output a logic formula (usually LogicFormulas combined with logic operators)
 class LogicFormula:
+    def __rshift__(self, rhs: Any):
+        return BoolOp(Not(self), BoolOpType.DISJ, into_logic_formula(rhs))
+
+    def __lshift__(self, rhs: Any):
+        return BoolOp(Not(into_logic_formula(rhs)), BoolOpType.DISJ, self)
+
+    def __rrshift__(self, lhs: Any):
+        return BoolOp(Not(into_logic_formula(lhs)), BoolOpType.DISJ, self)
+
+    def __rlshift__(self, lhs: Any):
+        return BoolOp(Not(self), BoolOpType.DISJ, into_logic_formula(lhs))
+
     def __lt__(self, rhs: Any):
         raise SyntaxError("Cannot compare logical formulas")
 
@@ -76,6 +88,9 @@ class LogicFormula:
 
     def __eq__(self, rhs: Any):
         raise SyntaxError("Cannot compare logical formulas")
+
+    def __invert__(self):
+        return Not(self)
 
     def __or__(self, rhs: IntoLogicFormula):
         return BoolOp(self, BoolOpType.DISJ, into_logic_formula(rhs))
@@ -398,7 +413,9 @@ class BoolOpBuilder:
     def __init__(self, op: BoolOpType) -> None:
         self.op = op
 
-    def __call__(self, formula1: IntoLogicFormula, formula2: IntoLogicFormula) -> BoolOp:
+    def __call__(
+        self, formula1: IntoLogicFormula, formula2: IntoLogicFormula
+    ) -> BoolOp:
         return BoolOp(formula1, self.op, formula2)
 
 
