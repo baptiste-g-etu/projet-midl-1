@@ -26,7 +26,39 @@ def dual(formula: LogicFormula) -> LogicFormula:
             raise ValueError("Cannot dualize a formula with quantifiers")
         return node
 
-    return formula.logical_map(swap_and_or)
+    return formula.map_formula(swap_and_or)
+
+
+# Function to find the logical negation of a formula (without adding `Not`s)
+def negation(formula: LogicFormula) -> LogicFormula:
+    def negation_inner(node: LogicFormula):
+        if isinstance(node, BoolOp):
+            new_op = (
+                BoolOpType.DISJ if node.boolop == BoolOpType.CONJ else BoolOpType.CONJ
+            )
+
+            # negation is already appplied to node.formula1 aaaand node.formula2
+            return BoolOp(node.formula1, new_op, node.formula2)
+        elif isinstance(node, Comp):
+            return ~node
+        elif isinstance(node, BoolConst):
+            return false if node.const else true
+        elif isinstance(node, Quantifier):
+            new_q = (
+                QuantifierType.EXISTS
+                if node.quantifier == QuantifierType.FORALL
+                else QuantifierType.FORALL
+            )
+            # negation is already appplied to node.formula
+            return Quantifier(new_q, node.variable, node.formula)
+        elif isinstance(node, Not):
+            # We don’t do anything (except for simplifying formulas),
+            # because the additional negation is already applied to the inner formula
+            if isinstance(node.formula, Not):
+                return node.formula.formula
+        return node
+
+    return formula.map_formula(negation_inner)
 
 
 def swap_quantifiers(formula: LogicFormula) -> LogicFormula:
@@ -44,4 +76,4 @@ def swap_quantifiers(formula: LogicFormula) -> LogicFormula:
             return Quantifier(new_q, node.variable, node.formula)
         return node
 
-    return formula.logical_map(swap_q)
+    return formula.map_formula(swap_q)

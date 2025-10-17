@@ -118,8 +118,8 @@ class LogicFormula:
     def is_syntaxically_eq(self, rhs: Any) -> bool:
         raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
 
-    def logical_map(self, fn: Callable[[Self], Self]) -> Self:
-        raise NotImplementedError(f"map not implemented for {self}")
+    def map_formula(self, fn: Callable[[Self], Self]) -> Self:
+        raise NotImplementedError(f"map_formula not implemented for {self}")
 
 
 class BoolOpType(StrEnum):
@@ -163,12 +163,12 @@ class BoolOp(LogicFormula):
     def __gt__(self, rhs: Any):
         raise SyntaxError("Cannot compare booleans")
 
-    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+    def map_formula(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
         return fn(
             BoolOp(
-                self.formula1.logical_map(fn),
+                self.formula1.map_formula(fn),
                 self.boolop,
-                self.formula2.logical_map(fn),
+                self.formula2.map_formula(fn),
             )
         )
 
@@ -264,7 +264,7 @@ class Comp(LogicFormula):
         """
         return self.expr1.is_syntaxically_eq(self.expr2)
 
-    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+    def map_formula(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
         return fn(self)
 
     # TODO Maybe implement a < b < c, for example as (a < b) and (b < c)
@@ -315,7 +315,7 @@ class BoolConst(LogicFormula):
         else:
             return "⊤" if self.const else "⊥"
 
-    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+    def map_formula(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
         return fn(self)
 
 
@@ -380,9 +380,9 @@ class Quantifier(LogicFormula):
         else:
             return f"{self.quantifier}{self.variable}.{self.formula.__repr_parenthesis__()}"
 
-    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+    def map_formula(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
         return fn(
-            Quantifier(self.quantifier, self.variable, self.formula.logical_map(fn))
+            Quantifier(self.quantifier, self.variable, self.formula.map_formula(fn))
         )
 
 
@@ -405,8 +405,8 @@ class Not(LogicFormula):
         else:
             return f"¬({self.formula.__repr_parenthesis__()})"
 
-    def logical_map(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
-        return fn(Not(self.formula.logical_map(fn)))
+    def map_formula(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
+        return fn(Not(self.formula.map_formula(fn)))
 
 
 class BoolOpBuilder:
