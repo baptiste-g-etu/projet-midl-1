@@ -4,11 +4,31 @@ from functions import *
 
 
 # Formula from the subjet pdf
-print(allq("x",allq(y,allq(z,exq(u,impl(conj(ltf(x, y), ltf(x, z)),conj(ltf(y, u), ltf(z, u))))))))
-print(allq("x1",allq(y,allq(z,exq(u,impl(conj(ltf(x, y), ltf(x, z)),conj(ltf(y, u), ltf(z, u))))))))
+print(
+    allq(
+        "x",
+        allq(
+            y,
+            allq(
+                z, exq(u, impl(conj(ltf(x, y), ltf(x, z)), conj(ltf(y, u), ltf(z, u))))
+            ),
+        ),
+    )
+)
+print(
+    allq(
+        "x1",
+        allq(
+            y,
+            allq(
+                z, exq(u, impl(conj(ltf(x, y), ltf(x, z)), conj(ltf(y, u), ltf(z, u))))
+            ),
+        ),
+    )
+)
 
 # This formula is rejected
-#print(allq("1",allq(y,allq(z,exq(u,impl(conj(ltf(x, y), ltf(x, z)),conj(ltf(y, u), ltf(z, u))))))))
+# print(allq("1",allq(y,allq(z,exq(u,impl(conj(ltf(x, y), ltf(x, z)),conj(ltf(y, u), ltf(z, u))))))))
 
 
 # Example usage for Dual() (used subject exemple):
@@ -17,8 +37,8 @@ print(f)
 
 print(f"After dual(): {dual(f)}")
 print(f"dual(not(f)): {dual(Not(f))}")
-#print("Dual with a quantifier (should raise an error):")
-#map_formula(allq("x", f), dual)
+# print("Dual with a quantifier (should raise an error):")
+# map_formula(allq("x", f), dual)
 
 
 # Example usage for swap_quantifiers():

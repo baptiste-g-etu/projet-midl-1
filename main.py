@@ -21,7 +21,6 @@ from setup import *
 #     sum(f, f), ArithOp(f, ArithOpType.SUM, f), ArithOpF(f, Sum, f), ArithOpF(f, Sum(), f), ArithOpBuilder(ArithOpType.SUM)(f, f),
 #     sub(f, f), ArithOp(f, ArithOpType.SUB, f), ArithOp(f, Sub, f), ArithOpF(f, Sub(), f), ArithOpBuilder(ArithOpType.SUB)(f, f),
 #     prod(f, f),ArithOp(f, ArithOpType.PROD, f), ArithOp(f, Prod, f), ArithOpF(f, Prod(), f), ArithOpBuilder(ArithOpType.PROD)(f, f),
-# 
 
 #     BoolOpF(l, Lt, l), BoolOp(l, Eq(), l),
 #     QuantifF(FORALL, v, l), Quantifier(EXISTS, v, l),
