@@ -51,13 +51,8 @@ class ArithExpression:
     def __rmul__(self, lhs: IntoArithExpression):
         return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
 
-    def __repr_parenthesis__(self):
-        return f"({self})"
-
-    def __repr_colored_parenthesis__(self, level: int) -> str:
-        raise NotImplementedError(
-            f"__repr_colored_parenthesis__ not implemented for {self}"
-        )
+    def __repr_colored__(self, level: int) -> str:
+        raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
 
     def __contains__(self, variable: "Variable") -> bool:
         raise NotImplementedError(f"__contains__ not implemented for {self}")
@@ -104,13 +99,8 @@ class LogicFormula:
     def __rand__(self, lhs: IntoLogicFormula):
         return BoolOp(into_logic_formula(lhs), BoolOpType.CONJ, self)
 
-    def __repr_parenthesis__(self):
-        return f"({self})"
-
-    def __repr_colored_parenthesis__(self, level: int) -> str:
-        raise NotImplementedError(
-            f"__repr_colored_parenthesis__ not implemented for {self}"
-        )
+    def __repr_colored__(self, level: int) -> str:
+        raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
 
     def __contains__(self, variable: "Variable") -> bool:
         raise NotImplementedError(f"__contains__ not implemented for {self}")
@@ -145,14 +135,31 @@ class BoolOp(LogicFormula):
             and self.formula2.is_syntaxically_eq(rhs.formula2)
         )
 
+    # TODO Find a way to factor the code of __repr__ and __repr_colored__ on all types
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored_parenthesis__(0)
+            return self.__repr_colored__(0)
         else:
-            return f"{self.formula1.__repr_parenthesis__()} {self.boolop} {self.formula2.__repr_parenthesis__()}"
+            formula1 = str(self.formula1)
+            formula2 = str(self.formula2)
+            if isinstance(self.formula1, BoolOp) or isinstance(self.formula1, Quantifier):
+                formula1 = f"({formula1})"
+            if isinstance(self.formula2, BoolOp) or isinstance(self.formula1, Quantifier):
+                formula2 = f"({formula2})"
+            return f"{formula1} {self.boolop} {formula2}"
 
-    def __repr_colored_parenthesis__(self, level: int) -> str:
-        return f"{color_level(level)}({COLOR_RESET}{self.formula1.__repr_colored_parenthesis__(level + 1)} {color_level(level)}{self.boolop}{COLOR_RESET} {self.formula2.__repr_colored_parenthesis__(level + 1)}{color_level(level)}){COLOR_RESET}"
+    def __repr_colored__(self, level: int) -> str:
+        formula1 = self.formula1.__repr_colored__(level + 1)
+        formula2 = self.formula2.__repr_colored__(level + 1)
+        if isinstance(self.formula1, BoolOp) or isinstance(self.formula1, Quantifier):
+            formula1 = (
+                f"{color_level(level + 1, '(')}{formula1}{color_level(level + 1, ')')}"
+            )
+        if isinstance(self.formula2, BoolOp) or isinstance(self.formula2, Quantifier):
+            formula2 = (
+                f"{color_level(level + 1, '(')}{formula2}{color_level(level + 1, ')')}"
+            )
+        return f"{formula1} {color_level(level, self.boolop)} {formula2}"
 
     def __contains__(self, variable: "Variable") -> bool:
         return variable in self.formula1 or variable in self.formula2
@@ -201,31 +208,33 @@ class ArithOp(ArithExpression):
             and self.expr2.is_syntaxically_eq(rhs.expr2)
         )
 
-    def __repr_parenthesis__(self) -> str:
-        return self.__repr__()
-
-    def __repr_colored_parenthesis__(self, level: int) -> str:
-        expr1 = f"{self.expr1.__repr_colored_parenthesis__(level)}"
-        expr2 = f"{self.expr2.__repr_colored_parenthesis__(level)}"
+    def __repr_colored__(self, level: int) -> str:
+        expr1 = self.expr1.__repr_colored__(level + 1)
+        expr2 = self.expr2.__repr_colored__(level + 1)
         if isinstance(self.expr1, ArithOp) and self.expr1.arithop == ArithOpType.SUM:
-            expr1 = f"({expr1})"
+            expr1 = f"{color_level(level + 1, '(')}{expr1}{color_level(level + 1, ')')}"
         if isinstance(self.expr2, ArithOp) and self.expr2.arithop == ArithOpType.SUM:
-            expr2 = f"({expr2})"
-        
-        return f"{expr1} {color_level(level)}{self.arithop}{COLOR_RESET} {expr2}"
+            expr2 = f"{color_level(level + 1, '(')}{expr2}{color_level(level + 1, ')')}"
+        return f"{expr1} {color_level(level, self.arithop)} {expr2}"
 
     def __contains__(self, variable: "Variable") -> bool:
         return variable in self.expr1 or variable in self.expr2
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored_parenthesis__(0)
+            return self.__repr_colored__(0)
         else:
-            expr1 = f"{self.expr1.__repr_parenthesis__()}"
-            expr2 = f"{self.expr2.__repr_parenthesis__()}"
-            if isinstance(self.expr1, ArithOp) and self.expr1.arithop == ArithOpType.SUM:
+            expr1 = f"{self.expr1}"
+            expr2 = f"{self.expr2}"
+            if (
+                isinstance(self.expr1, ArithOp)
+                and self.expr1.arithop == ArithOpType.SUM
+            ):
                 expr1 = f"({expr1})"
-            if isinstance(self.expr2, ArithOp) and self.expr2.arithop == ArithOpType.SUM:
+            if (
+                isinstance(self.expr2, ArithOp)
+                and self.expr2.arithop == ArithOpType.SUM
+            ):
                 expr2 = f"({expr2})"
             return f"{expr1} {self.arithop} {expr2}"
 
@@ -256,17 +265,14 @@ class Comp(LogicFormula):
             and self.expr2.is_syntaxically_eq(rhs.expr2)
         )
 
-    def __repr_parenthesis__(self) -> str:
-        return self.__repr__()
-
-    def __repr_colored_parenthesis__(self, level: int) -> str:
-        return f"{self.expr1.__repr_colored_parenthesis__(level)} {color_level(level)}{self.comp}{COLOR_RESET} {self.expr2.__repr_colored_parenthesis__(level)}"
+    def __repr_colored__(self, level: int) -> str:
+        return f"{self.expr1.__repr_colored__(level + 1)} {color_level(level, self.comp)} {self.expr2.__repr_colored__(level + 1)}"
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored_parenthesis__(0)
+            return self.__repr_colored__(0)
         else:
-            return f"{self.expr1.__repr_parenthesis__()} {self.comp} {self.expr2.__repr_parenthesis__()}"
+            return f"{self.expr1} {self.comp} {self.expr2}"
 
     def __contains__(self, variable: "Variable") -> bool:
         return variable in self.expr1 or variable in self.expr2
@@ -290,18 +296,15 @@ class Variable(ArithExpression):
     def is_syntaxically_eq(self, rhs: Self) -> bool:
         return self.name == rhs.name
 
-    def __repr_parenthesis__(self) -> str:
-        return self.__repr__()
-
-    def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level)}{self.name}{COLOR_RESET}"
+    def __repr_colored__(self, level: int):
+        return color_level(level, self.name)
 
     def __contains__(self, variable: Self) -> bool:
         return variable.name == self.name
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored_parenthesis__(0)
+            return self.__repr_colored__(0)
         else:
             return self.name
 
@@ -313,18 +316,15 @@ class BoolConst(LogicFormula):
     def is_syntaxically_eq(self, rhs: Self) -> bool:
         return self.const == rhs.const
 
-    def __repr_parenthesis__(self) -> str:
-        return self.__repr__()
-
-    def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level)}{'⊤' if self.const else '⊥'}{COLOR_RESET}"
+    def __repr_colored__(self, level: int):
+        return color_level(level, "⊤" if self.const else "⊥")
 
     def __contains__(self, variable: Variable) -> bool:
         return False
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored_parenthesis__(0)
+            return self.__repr_colored__(0)
         else:
             return "⊤" if self.const else "⊥"
 
@@ -339,18 +339,15 @@ class IntegerConst(ArithExpression):
     def is_syntaxically_eq(self, rhs: Self) -> bool:
         return self.const == rhs.const
 
-    def __repr_parenthesis__(self) -> str:
-        return self.__repr__()
-
-    def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level)}{self.const}{COLOR_RESET}"
+    def __repr_colored__(self, level: int):
+        return color_level(level, str(self.const))
 
     def __contains__(self, variable: Variable) -> bool:
         return False
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored_parenthesis__(0)
+            return self.__repr_colored__(0)
         else:
             return str(self.const)
 
@@ -377,11 +374,11 @@ class Quantifier(LogicFormula):
         self.variable = into_variable(variable)
         self.formula = into_logic_formula(formula)
 
-    def __repr_parenthesis__(self) -> str:
-        return self.__repr__()
-
-    def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level)}{self.quantifier}{COLOR_RESET}{self.variable.__repr_colored_parenthesis__(level)}{color_level(level)}.{COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level)}"
+    def __repr_colored__(self, level: int):
+        formula = self.formula.__repr_colored__(level)
+        if not isinstance(self.formula, Quantifier):
+            formula = f"{color_level(level, '(')}{formula}{color_level(level, ')')}"
+        return f"{color_level(level, self.quantifier)}{self.variable.__repr_colored__(level)}{color_level(level, '.')}{formula}"
 
     def __contains__(self, variable: Variable) -> bool:
         # TODO self.variable is in the formula ???
@@ -389,9 +386,12 @@ class Quantifier(LogicFormula):
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored_parenthesis__(0)
+            return self.__repr_colored__(0)
         else:
-            return f"{self.quantifier}{self.variable}.{self.formula.__repr_parenthesis__()}"
+            formula = str(self.formula)
+            if not isinstance(self.formula, Quantifier):
+                formula = f"({formula})"
+            return f"{self.quantifier}{self.variable}.{formula}"
 
     def map_formula(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
         return fn(
@@ -402,21 +402,17 @@ class Quantifier(LogicFormula):
 class Not(LogicFormula):
     def __init__(self, formula: IntoLogicFormula) -> None:
         self.formula = into_logic_formula(formula)
-
-    def __repr_parenthesis__(self) -> str:
-        return self.__repr__()
-
-    def __repr_colored_parenthesis__(self, level: int):
-        return f"{color_level(level)}¬({COLOR_RESET}{self.formula.__repr_colored_parenthesis__(level + 1)}{color_level(level)}){COLOR_RESET}"
+    def __repr_colored__(self, level: int):
+        return f"{color_level(level, "¬(")}{self.formula.__repr_colored__(level + 1)}{color_level(level, ")")}"
 
     def __contains__(self, variable: "Variable") -> bool:
         return variable in self.formula
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored_parenthesis__(0)
+            return self.__repr_colored__(0)
         else:
-            return f"¬({self.formula.__repr_parenthesis__()})"
+            return f"¬({self.formula})"
 
     def map_formula(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
         return fn(Not(self.formula.map_formula(fn)))
@@ -529,8 +525,8 @@ def into_variable(var: Any) -> Variable:
         raise TypeError(f"Cannot convert value of type {type(var)} into Variable")
 
 
-def color_level(level: int):
+def color_level(level: int, text: str):
     """
-    Returns the appropriate colors for different levels of nested formulas.
+    Colors the text with the appropriate colors for different levels of nested formulas.
     """
-    return f"\x1b[{NORMAL[level % len(NORMAL)]}m"
+    return f"\x1b[{NORMAL[level % len(NORMAL)]}m{text}{COLOR_RESET}"
