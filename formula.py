@@ -205,7 +205,14 @@ class ArithOp(ArithExpression):
         return self.__repr__()
 
     def __repr_colored_parenthesis__(self, level: int) -> str:
-        return f"{self.expr1.__repr_colored_parenthesis__(level)} {color_level(level)}{self.arithop}{COLOR_RESET} {self.expr2.__repr_colored_parenthesis__(level)}"
+        expr1 = f"{self.expr1.__repr_colored_parenthesis__(level)}"
+        expr2 = f"{self.expr2.__repr_colored_parenthesis__(level)}"
+        if isinstance(self.expr1, ArithOp) and self.expr1.arithop == ArithOpType.SUM:
+            expr1 = f"({expr1})"
+        if isinstance(self.expr2, ArithOp) and self.expr2.arithop == ArithOpType.SUM:
+            expr2 = f"({expr2})"
+        
+        return f"{expr1} {color_level(level)}{self.arithop}{COLOR_RESET} {expr2}"
 
     def __contains__(self, variable: "Variable") -> bool:
         return variable in self.expr1 or variable in self.expr2
@@ -214,7 +221,13 @@ class ArithOp(ArithExpression):
         if COLORING:
             return self.__repr_colored_parenthesis__(0)
         else:
-            return f"{self.expr1.__repr_parenthesis__()} {self.arithop} {self.expr2.__repr_parenthesis__()}"
+            expr1 = f"{self.expr1.__repr_parenthesis__()}"
+            expr2 = f"{self.expr2.__repr_parenthesis__()}"
+            if isinstance(self.expr1, ArithOp) and self.expr1.arithop == ArithOpType.SUM:
+                expr1 = f"({expr1})"
+            if isinstance(self.expr2, ArithOp) and self.expr2.arithop == ArithOpType.SUM:
+                expr2 = f"({expr2})"
+            return f"{expr1} {self.arithop} {expr2}"
 
 
 class CompType(StrEnum):
