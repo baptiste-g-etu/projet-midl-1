@@ -1,4 +1,4 @@
-from setup import *
+from prelude import *
 
 # form: list = [
 #     Eq, Eq(), EQUAL, EQUAL(),

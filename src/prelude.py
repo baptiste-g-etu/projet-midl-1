@@ -1,24 +1,17 @@
-from formula import (
-    ArithExpression,  # noqa: F401
-    ArithOp,
-    ArithOpBuilder,
-    ArithOpType,
-    BoolConst,
-    BoolOp,
-    BoolOpBuilder,
-    BoolOpType,
-    Comp,
-    CompBuilder,
-    CompType,
+from formula.arithop import ArithOp, ArithOpBuilder, ArithOpType
+from formula.boolconst import BoolConst
+from formula.boolop import BoolOp, BoolOpBuilder, BoolOpType
+from formula.comp import Comp, CompBuilder, CompType
+from formula.types import (
+    ArithExpression,  # type: ignore # noqa: F401
+    LogicFormula,  # type: ignore # noqa: F401
+    IntoArithExpression,  # type: ignore # noqa: F401
     IntoLogicFormula,
-    IntoVariable,
-    LogicFormula,  # noqa: F401
-    Not,
-    Quantifier,
-    QuantifierBuilder,
-    QuantifierType,
-    Variable,
 )
+from formula.notb import Not
+from formula.quantifier import Quantifier, QuantifierBuilder, QuantifierType
+from formula.variable import IntoVariable, Variable
+
 import string
 
 

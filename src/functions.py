@@ -3,14 +3,18 @@ Temporary file to try recursive functions over all nodes in a tree.
 """
 
 # TODO : decide where to put all these functions : into formula.py, setup.py, or here ?
-from formula import (
-    LogicFormula,
+from prelude import (
+    BoolConst,
     BoolOp,
-    Quantifier,
     BoolOpType,
+    Comp,
+    LogicFormula,
+    Not,
+    Quantifier,
     QuantifierType,
+    false,
+    true,
 )
-from setup import *
 
 
 # Function to dualize a formula by swapping AND and OR operators
