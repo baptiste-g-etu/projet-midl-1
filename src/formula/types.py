@@ -56,12 +56,6 @@ class ArithExpression:
 
         return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
 
-    def __repr_colored__(self, level: int) -> str:
-        raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
-
-    def is_syntaxically_eq(self, rhs: Any) -> bool:
-        raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
-
 
 # Types which output a logic formula (usually LogicFormulas combined with logic operators)
 class LogicFormula:
@@ -124,18 +118,6 @@ class LogicFormula:
         from .boolop import BoolOp, BoolOpType
 
         return BoolOp(into_logic_formula(lhs), BoolOpType.CONJ, self)
-
-    def __repr_colored__(self, level: int) -> str:
-        raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
-
-    def __contains__(self, variable: Variable) -> bool:
-        raise NotImplementedError(f"__contains__ not implemented for {self}")
-
-    def is_syntaxically_eq(self, rhs: Any) -> bool:
-        raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
-
-    def map_formula(self, fn: Callable[[Self], Self]) -> Self:
-        raise NotImplementedError(f"map_formula not implemented for {self}")
 
 
 def into_arith_expr(var: Any) -> ArithExpression:
