@@ -9,17 +9,29 @@ type IntoLogicFormula = LogicFormula | bool
 
 # Types which are arithmetic expressions (usually ArithExpressions combined with arithmetic operators)
 class ArithExpression:
-    def __lt__(self, rhs: Any):
+    def __lt__(self, rhs: IntoArithExpression):
         from .comp import Comp, CompType
 
-        return Comp(self, CompType.LOWER_THAN, rhs)
+        return Comp(self, CompType.LOWER_THAN, into_arith_expr(rhs))
 
     def __gt__(self, rhs: IntoArithExpression):
         from .comp import Comp, CompType
 
         return Comp(into_arith_expr(rhs), CompType.LOWER_THAN, self)
 
-    # TODO lower equal ?
+    def __le__(self, rhs: IntoArithExpression):
+        from .comp import Comp, CompType
+
+        return Comp(self, CompType.LOWER_THAN, into_arith_expr(rhs)) | Comp(
+            self, CompType.EQUAL, into_arith_expr(rhs)
+        )
+
+    def __ge__(self, rhs: IntoArithExpression):
+        from .comp import Comp, CompType
+
+        return Comp(into_arith_expr(rhs), CompType.LOWER_THAN, self) | Comp(
+            self, CompType.EQUAL, into_arith_expr(rhs)
+        )
 
     def __eq__(self, rhs: IntoArithExpression):  # type: ignore because __eq__ is supposed to always return a bool
         from .comp import Comp, CompType
@@ -95,6 +107,12 @@ class LogicFormula:
         raise SyntaxError("Cannot compare logical formulas")
 
     def __gt__(self, rhs: Any):
+        raise SyntaxError("Cannot compare logical formulas")
+
+    def __le__(self, rhs: Any):
+        raise SyntaxError("Cannot compare logical formulas")
+
+    def __ge__(self, rhs: Any):
         raise SyntaxError("Cannot compare logical formulas")
 
     def __eq__(self, rhs: Any):
