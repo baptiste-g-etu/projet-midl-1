@@ -71,6 +71,9 @@ class ArithExpression:
     def __repr_colored__(self, level: int) -> str:
         raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
 
+    def __contains__(self, variable: Any) -> bool:
+        raise NotImplementedError(f"__contains__ not implemented for {self}")
+
     def is_syntaxically_eq(self, rhs: Any) -> bool:
         raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
 
