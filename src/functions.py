@@ -33,7 +33,7 @@ def dual(formula: LogicFormula) -> LogicFormula:
     return formula.map_formula(swap_and_or)
 
 
-# Function to find the logical negation of a formula (without adding `Not`s)
+# Function to find the logical negation of a formula (without adding `Not`)
 def negation(formula: LogicFormula) -> LogicFormula:
     def negation_inner(node: LogicFormula):
         if isinstance(node, BoolOp):
