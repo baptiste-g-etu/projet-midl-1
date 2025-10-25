@@ -32,7 +32,9 @@ class Quantifier(LogicFormula):
         self.formula = into_logic_formula(formula)
 
     def __repr_colored__(self, level: int):
-        formula = self.formula.__repr_colored__(level)
+        formula = self.formula.__repr_colored__(
+            level + (1 if not isinstance(self.formula, Quantifier) else 0)
+        )
         if not isinstance(self.formula, Quantifier):
             formula = f"{color_level(level, '(')}{formula}{color_level(level, ')')}"
         return f"{color_level(level, self.quantifier)}{self.variable.__repr_colored__(level)}{color_level(level, '.')}{formula}"

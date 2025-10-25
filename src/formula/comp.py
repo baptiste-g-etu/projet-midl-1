@@ -32,7 +32,7 @@ class Comp(LogicFormula):
         )
 
     def __repr_colored__(self, level: int) -> str:
-        return f"{self.expr1.__repr_colored__(level + 1)} {color_level(level, self.comp)} {self.expr2.__repr_colored__(level + 1)}"
+        return f"{self.expr1.__repr_colored__(level)} {color_level(level, self.comp)} {self.expr2.__repr_colored__(level)}"
 
     def __repr__(self) -> str:
         if COLORING:

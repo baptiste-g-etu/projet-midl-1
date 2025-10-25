@@ -34,12 +34,12 @@ class ArithOp(ArithExpression):
         )
 
     def __repr_colored__(self, level: int) -> str:
-        expr1 = self.expr1.__repr_colored__(level + 1)
-        expr2 = self.expr2.__repr_colored__(level + 1)
+        expr1 = self.expr1.__repr_colored__(level)
+        expr2 = self.expr2.__repr_colored__(level)
         if isinstance(self.expr1, ArithOp) and self.expr1.arithop == ArithOpType.SUM:
-            expr1 = f"{color_level(level + 1, '(')}{expr1}{color_level(level + 1, ')')}"
+            expr1 = f"{color_level(level, '(')}{expr1}{color_level(level, ')')}"
         if isinstance(self.expr2, ArithOp) and self.expr2.arithop == ArithOpType.SUM:
-            expr2 = f"{color_level(level + 1, '(')}{expr2}{color_level(level + 1, ')')}"
+            expr2 = f"{color_level(level, '(')}{expr2}{color_level(level, ')')}"
         return f"{expr1} {color_level(level, self.arithop)} {expr2}"
 
     def __contains__(self, variable: "Variable") -> bool:
