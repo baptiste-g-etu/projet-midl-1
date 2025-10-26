@@ -123,15 +123,15 @@ def dnf(
             elif isinstance(node.formula, BoolOp):
                 match node.formula.boolop:
                     case BoolOpType.CONJ:
-                        return dnf_inner(
-                            ~dnf_inner(node.formula.formula1)
-                            | ~dnf_inner(node.formula.formula2)
-                        )  # ~(a & b) -> (~a | ~b)
+                        return ~node.formula.formula1.map_formula(
+                            dnf_inner
+                        ) | ~node.formula.formula2.map_formula(dnf_inner)
+                        # ~(a & b) -> (~a | ~b)
                     case BoolOpType.DISJ:
-                        return dnf_inner(
-                            ~dnf_inner(node.formula.formula1)
-                            & ~dnf_inner(node.formula.formula2)
-                        )  # ~(a | b) -> (~a & ~b)
+                        return ~node.formula.formula1.map_formula(
+                            dnf_inner
+                        ) & ~node.formula.formula2.map_formula(dnf_inner)
+                        # ~(a | b) -> (~a & ~b)
         elif isinstance(node, BoolOp):
             if node.boolop == BoolOpType.CONJ:
                 if (
@@ -157,6 +157,77 @@ def dnf(
             flatten_conj(formula)
             for formula in flatten_disj(
                 into_logic_formula(formula).map_formula(dnf_inner)
+            )
+        ]
+    )
+
+
+class CNF(LogicFormula):
+    def __init__(self, formula: LogicFormula) -> None:
+        self.formulas: FormulaSet[
+            FormulaSet[LogicFormula, Literal[BoolOpType.DISJ]], Literal[BoolOpType.CONJ]
+        ] = cnf(formula)
+
+    def __repr_colored__(self, level: int) -> str:
+        return f"{color_level(level, 'CNF(')}{self.formulas.__repr_colored__(level + 1)}{color_level(level, ')')}"
+
+    def __repr__(self) -> str:
+        if COLORING:
+            return self.__repr_colored__(0)
+        else:
+            return f"CNF({self.formulas})"
+
+
+def cnf(
+    formula: IntoLogicFormula,
+) -> FormulaSet[
+    FormulaSet[LogicFormula, Literal[BoolOpType.DISJ]], Literal[BoolOpType.CONJ]
+]:
+    """
+    Converts the given formula into a Disjunctive Normal Form
+    """
+
+    def cnf_inner(node: LogicFormula):
+        if isinstance(node, Not):
+            if isinstance(node.formula, Not):
+                return node.formula.formula  # ~~a -> a
+            elif isinstance(node.formula, BoolOp):
+                match node.formula.boolop:
+                    case BoolOpType.CONJ:
+                        return ~node.formula.formula1.map_formula(
+                            cnf_inner
+                        ) | ~node.formula.formula2.map_formula(cnf_inner)
+                        # ~(a & b) -> (~a | ~b)
+                    case BoolOpType.DISJ:
+                        return ~node.formula.formula1.map_formula(
+                            cnf_inner
+                        ) & ~node.formula.formula2.map_formula(cnf_inner)
+                        # ~(a | b) -> (~a & ~b)
+        elif isinstance(node, BoolOp):
+            if node.boolop == BoolOpType.DISJ:
+                if (
+                    isinstance(node.formula1, BoolOp)
+                    and node.formula1.boolop == BoolOpType.CONJ
+                ):
+                    return (
+                        (node.formula1.formula1 | node.formula2)
+                        & (node.formula1.formula2 | node.formula2)
+                    ).map_formula(cnf_inner)  # (a & b) | c -> (a | c) & (b | c)
+                elif (
+                    isinstance(node.formula2, BoolOp)
+                    and node.formula2.boolop == BoolOpType.CONJ
+                ):
+                    return (
+                        (node.formula1 | node.formula2.formula1)
+                        & (node.formula1 | node.formula2.formula2)
+                    ).map_formula(cnf_inner)  # a | (b & c) -> (a | b) & (a | c)
+        return node
+
+    return FormulaSet(
+        [
+            flatten_disj(formula)
+            for formula in flatten_conj(
+                into_logic_formula(formula).map_formula(cnf_inner)
             )
         ]
     )

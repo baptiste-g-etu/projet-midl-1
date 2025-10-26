@@ -3,7 +3,7 @@ from formula.boolconst import BoolConst
 from formula.boolop import BoolOp, BoolOpBuilder, BoolOpType
 from formula.coloring import COLORING, color_level  # type: ignore # noqa: F401
 from formula.comp import Comp, CompBuilder, CompType
-from formula.forms import DNF, dnf, FormulaSet, NNF, nnf  # type: ignore # noqa: F401
+from formula.forms import CNF, cnf, DNF, dnf, FormulaSet, NNF, nnf  # type: ignore # noqa: F401
 from formula.types import (
     ArithExpression,  # type: ignore # noqa: F401
     LogicFormula,  # type: ignore # noqa: F401
