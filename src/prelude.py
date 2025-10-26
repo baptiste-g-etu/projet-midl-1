@@ -3,16 +3,17 @@ from formula.boolconst import BoolConst
 from formula.boolop import BoolOp, BoolOpBuilder, BoolOpType
 from formula.coloring import COLORING, color_level  # type: ignore # noqa: F401
 from formula.comp import Comp, CompBuilder, CompType
+from formula.forms import DNF, dnf, FormulaSet, NNF, nnf  # type: ignore # noqa: F401
 from formula.types import (
     ArithExpression,  # type: ignore # noqa: F401
     LogicFormula,  # type: ignore # noqa: F401
     IntoArithExpression,  # type: ignore # noqa: F401
     IntoLogicFormula,
+    into_logic_formula,  # type: ignore # noqa: F401
 )
 from formula.notb import Not
 from formula.quantifier import Quantifier, QuantifierBuilder, QuantifierType
 from formula.variable import IntoVariable, Variable
-from forms import NNF, nnf  # type: ignore # noqa: F401
 
 import string
 

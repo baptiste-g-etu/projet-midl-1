@@ -8,6 +8,8 @@ from prelude import (
     BoolOp,
     BoolOpType,
     Comp,
+    IntoLogicFormula,
+    into_logic_formula,
     LogicFormula,
     Not,
     Quantifier,
@@ -18,7 +20,7 @@ from prelude import (
 
 
 # Function to dualize a formula by swapping AND and OR operators
-def dual(formula: LogicFormula) -> LogicFormula:
+def dual(formula: IntoLogicFormula) -> LogicFormula:
     def swap_and_or(node: LogicFormula):
         if isinstance(node, BoolOp):
             new_op = (
@@ -30,11 +32,11 @@ def dual(formula: LogicFormula) -> LogicFormula:
             raise ValueError("Cannot dualize a formula with quantifiers")
         return node
 
-    return formula.map_formula(swap_and_or)
+    return into_logic_formula(formula).map_formula(swap_and_or)
 
 
 # Function to find the logical negation of a formula (without adding `Not`)
-def negation(formula: LogicFormula) -> LogicFormula:
+def negation(formula: IntoLogicFormula) -> LogicFormula:
     def negation_inner(node: LogicFormula):
         if isinstance(node, BoolOp):
             new_op = (
@@ -62,10 +64,10 @@ def negation(formula: LogicFormula) -> LogicFormula:
                 return node.formula.formula
         return node
 
-    return formula.map_formula(negation_inner)
+    return into_logic_formula(formula).map_formula(negation_inner)
 
 
-def swap_quantifiers(formula: LogicFormula) -> LogicFormula:
+def swap_quantifiers(formula: IntoLogicFormula) -> LogicFormula:
     """
     Swap all quantifiers in the formula: FORALL <-> EXISTS
     """
@@ -80,4 +82,4 @@ def swap_quantifiers(formula: LogicFormula) -> LogicFormula:
             return Quantifier(new_q, node.variable, node.formula)
         return node
 
-    return formula.map_formula(swap_q)
+    return into_logic_formula(formula).map_formula(swap_q)

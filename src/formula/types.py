@@ -1,5 +1,6 @@
 from typing import Any, Callable, Self
 
+
 # Types that can be converted into an ArithExpression
 type IntoArithExpression = ArithExpression | int | str
 
@@ -187,6 +188,7 @@ def into_logic_formula(var: Any) -> LogicFormula:
     This is useful to allow, for example `forall.a(True)` without having to type `forall.a(BoolConst(True))`.
     """
     from .boolconst import BoolConst
+    from .forms import NNF
 
     if isinstance(var, bool):
         return BoolConst(var)
@@ -195,4 +197,7 @@ def into_logic_formula(var: Any) -> LogicFormula:
             raise TypeError(
                 f"Cannot convert value of type {type(var)} into LogicFormula"
             )
+        if isinstance(var, NNF):
+            return var.formula
+        # TODO Add DNF and CNF
         return var
