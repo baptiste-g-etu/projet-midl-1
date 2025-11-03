@@ -14,12 +14,6 @@ Dans ce projet, nous avons ajouté quelques fonctionnalités pour faciliter l'ex
 - Déclaration de variables logiques sans utiliser des guillemets, pour les lettres classiques ("x" = x), nous y reviendrons avec des exemples.
 - Ajout d'une syntaxe supplémentaire plus proche du LATEX
 
-| Syntaxe d'origine                                                   |  Syntaxe d'origine simplifiée   |                                                       Notre syntaxe |
-| ------------------------------------------------------------------- | :-----------------------------: | ------------------------------------------------------------------: |
-| QuantifF (All(), "x",QuantifF (Ex(), "y", ComparF("x", Lt(), "y"))) | allq("x",exq("y",ltf("x","y"))) | TO ADD (il est 0h45 je suis trop fatigué pour retrouver la syntaxe) |
-| Lorem                                                               |              ipsum              |                                                               dolor |
-
-
 ## Tâche 1
 
 ```setup.py``` contient les synonymes et les opérateurs de base. Il est le remplacement du fichier initial ```syntax.py```

@@ -19,7 +19,7 @@ class NNF(LogicFormula):
         if COLORING:
             return self.__repr_colored__(0)
         else:
-            return f"NNF({self.formula})"
+            return f"NNF{self.formula}"
 
 
 def nnf(formula: IntoLogicFormula) -> LogicFormula:
@@ -103,7 +103,7 @@ class DNF(LogicFormula):
         ] = dnf(formula)
 
     def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, 'DNF(')}{self.formulas.__repr_colored__(level + 1)}{color_level(level, ')')}"
+        return f"{color_level(level, 'DNF')}{self.formulas.__repr_colored__(level)}"
 
     def __repr__(self) -> str:
         if COLORING:
@@ -176,7 +176,7 @@ class CNF(LogicFormula):
         ] = cnf(formula)
 
     def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, 'CNF(')}{self.formulas.__repr_colored__(level + 1)}{color_level(level, ')')}"
+        return f"{color_level(level, 'CNF')}{self.formulas.__repr_colored__(level)}"
 
     def __repr__(self) -> str:
         if COLORING:
