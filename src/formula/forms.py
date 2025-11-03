@@ -3,10 +3,13 @@ from formula.coloring import color_level, COLORING
 from formula.notb import Not
 from formula.types import IntoLogicFormula, LogicFormula, into_logic_formula
 from formula.boolop import BoolOp, BoolOpType
+from formula.quantifier import Quantifier
 
 
 class NNF(LogicFormula):
     def __init__(self, formula: LogicFormula) -> None:
+        while isinstance(formula, Quantifier):
+            formula = formula.formula
         self.formula = nnf(formula)
 
     def __repr_colored__(self, level: int) -> str:
@@ -93,6 +96,8 @@ def flatten_conj(
 
 class DNF(LogicFormula):
     def __init__(self, formula: LogicFormula) -> None:
+        while isinstance(formula, Quantifier):
+            formula = formula.formula
         self.formulas: FormulaSet[
             FormulaSet[LogicFormula, Literal[BoolOpType.CONJ]], Literal[BoolOpType.DISJ]
         ] = dnf(formula)
@@ -164,6 +169,8 @@ def dnf(
 
 class CNF(LogicFormula):
     def __init__(self, formula: LogicFormula) -> None:
+        while isinstance(formula, Quantifier):
+            formula = formula.formula
         self.formulas: FormulaSet[
             FormulaSet[LogicFormula, Literal[BoolOpType.DISJ]], Literal[BoolOpType.CONJ]
         ] = cnf(formula)
