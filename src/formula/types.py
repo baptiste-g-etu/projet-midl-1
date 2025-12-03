@@ -39,6 +39,11 @@ class ArithExpression:
 
         return Comp(self, CompType.EQUAL, into_arith_expr(rhs))
 
+    def __ne__(self, rhs: IntoArithExpression):  # type: ignore because __ne__ is supposed to always return a bool
+        from .comp import Comp, CompType
+
+        return ~(Comp(self, CompType.EQUAL, into_arith_expr(rhs)))
+
     def __add__(self, rhs: IntoArithExpression):
         from .arithop import ArithOp, ArithOpType
 
