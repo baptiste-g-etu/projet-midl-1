@@ -3,23 +3,17 @@ Temporary file to try recursive functions over all nodes in a tree.
 """
 
 # TODO : decide where to put all these functions : into formula.py, setup.py, or here ?
-from prelude import (
-    BoolConst,
-    BoolOp,
-    BoolOpType,
-    Comp,
-    IntoLogicFormula,
-    into_logic_formula,
-    LogicFormula,
-    Not,
-    Quantifier,
-    QuantifierType,
-    false,
-    true,
-)
-
 
 # Function to dualize a formula by swapping AND and OR operators
+from formula.boolconst import BoolConst
+from formula.boolop import BoolOp, BoolOpType
+from formula.comp import Comp
+from formula.notb import Not
+from formula.quantifier import Quantifier, QuantifierBuilder, QuantifierType
+from formula.types import IntoLogicFormula, LogicFormula, into_logic_formula
+from formula.variable import Variable
+
+
 def dual(formula: IntoLogicFormula) -> LogicFormula:
     def swap_and_or(node: LogicFormula):
         if isinstance(node, BoolOp):
@@ -48,7 +42,7 @@ def negation(formula: IntoLogicFormula) -> LogicFormula:
         elif isinstance(node, Comp):
             return ~node
         elif isinstance(node, BoolConst):
-            return false if node.const else true
+            return BoolConst(False) if node.const else BoolConst(True)
         elif isinstance(node, Quantifier):
             new_q = (
                 QuantifierType.EXISTS
@@ -83,3 +77,16 @@ def swap_quantifiers(formula: IntoLogicFormula) -> LogicFormula:
         return node
 
     return into_logic_formula(formula).map_formula(swap_q)
+
+
+def close(f: IntoLogicFormula) -> LogicFormula:
+    f = into_logic_formula(f)
+    quantifier_builder = QuantifierBuilder(QuantifierType.FORALL)
+    quantifier_builder.variables = free_variables(f)
+
+    return quantifier_builder(f)
+
+
+def free_variables(f: IntoLogicFormula) -> list[Variable]:
+    f = into_logic_formula(f)
+    return [variable for variable in f if f[variable].is_free()]

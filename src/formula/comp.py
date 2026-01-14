@@ -1,7 +1,9 @@
 from enum import StrEnum
-from typing import Callable, Self
+from itertools import chain
+from typing import Callable, Iterator, Self
+
 from .coloring import COLORING, color_level
-from .types import LogicFormula, IntoArithExpression, into_arith_expr
+from .types import IntoArithExpression, LogicFormula, into_arith_expr
 from .variable import Variable
 
 
@@ -40,8 +42,10 @@ class Comp(LogicFormula):
         else:
             return f"{self.expr1} {self.comp} {self.expr2}"
 
-    def __contains__(self, variable: "Variable") -> bool:
-        return variable in self.expr1 or variable in self.expr2
+    def __iter__(self) -> Iterator[Variable]:
+        variable_list = list(set(chain(iter(self.expr1), iter(self.expr2))))
+        variable_list.sort(key=lambda v: v.name)
+        return iter(variable_list)
 
     def __bool__(self):
         """

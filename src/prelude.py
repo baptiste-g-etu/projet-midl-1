@@ -14,6 +14,8 @@ from formula.types import (
 from formula.notb import Not
 from formula.quantifier import Quantifier, QuantifierBuilder, QuantifierType
 from formula.variable import IntoVariable, Variable
+from functions import swap_quantifiers, close, free_variables, negation, dual  # type: ignore # noqa: F401
+from decision.elim import decide  # type: ignore # noqa: F401
 from variables import a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z  # type: ignore # noqa: F401 # fmt: skip
 
 import string

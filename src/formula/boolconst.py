@@ -1,4 +1,5 @@
-from typing import Callable, Self
+from typing import Callable, Iterator, Self
+
 from .coloring import COLORING, color_level
 from .types import LogicFormula
 from .variable import Variable
@@ -14,8 +15,8 @@ class BoolConst(LogicFormula):
     def __repr_colored__(self, level: int):
         return color_level(level, "⊤" if self.const else "⊥")
 
-    def __contains__(self, variable: Variable) -> bool:
-        return False
+    def __iter__(self) -> Iterator[Variable]:
+        return iter([])
 
     def __repr__(self) -> str:
         if COLORING:

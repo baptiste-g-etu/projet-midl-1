@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Iterator, Self
 from .coloring import COLORING, color_level
 from .types import ArithExpression
 from .variable import Variable
@@ -14,8 +14,8 @@ class IntegerConst(ArithExpression):
     def __repr_colored__(self, level: int):
         return color_level(level, str(self.const))
 
-    def __contains__(self, variable: Variable) -> bool:
-        return False
+    def __iter__(self) -> Iterator[Variable]:
+        return iter([])
 
     def __repr__(self) -> str:
         if COLORING:

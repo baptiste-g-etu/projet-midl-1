@@ -1,5 +1,6 @@
-from typing import Any, Self
-from .coloring import color_level, COLORING
+from typing import Any, Iterator, Self
+
+from .coloring import COLORING, color_level
 from .types import ArithExpression
 
 # Types that can be converted into a Variable
@@ -16,8 +17,11 @@ class Variable(ArithExpression):
     def __repr_colored__(self, level: int):
         return color_level(level, self.name)
 
-    def __contains__(self, variable: Self) -> bool:
-        return variable.name == self.name
+    def __iter__(self) -> Iterator["Variable"]:
+        return iter([self])
+
+    def __hash__(self) -> int:
+        return hash(self.name)
 
     def __repr__(self) -> str:
         if COLORING:

@@ -1,5 +1,6 @@
 from enum import StrEnum
-from typing import Callable, Self
+from typing import Callable, Iterator, Self
+
 from .coloring import COLORING, color_level
 from .types import (
     IntoLogicFormula,
@@ -39,9 +40,9 @@ class Quantifier(LogicFormula):
             formula = f"{color_level(level, '(')}{formula}{color_level(level, ')')}"
         return f"{color_level(level, self.quantifier)}{self.variable.__repr_colored__(level)}{color_level(level, '.')}{formula}"
 
-    def __contains__(self, variable: Variable) -> bool:
+    def __iter__(self) -> Iterator[Variable]:
         # TODO self.variable is in the formula ???
-        return variable in self.formula
+        return iter(self.formula)
 
     def __repr__(self) -> str:
         if COLORING:

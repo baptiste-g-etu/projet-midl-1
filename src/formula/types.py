@@ -1,4 +1,4 @@
-from typing import Any, Callable, Self
+from typing import Any, Callable, Iterator, Self
 
 
 # Types that can be converted into an ArithExpression
@@ -77,8 +77,8 @@ class ArithExpression:
     def __repr_colored__(self, level: int) -> str:
         raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
 
-    def __contains__(self, variable: Any) -> bool:
-        raise NotImplementedError(f"__contains__ not implemented for {self}")
+    def __iter__(self) -> Iterator[Any]:
+        raise NotImplementedError(f"__iter__ not implemented for {self}")
 
     def is_syntaxically_eq(self, rhs: Any) -> bool:
         raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
@@ -155,8 +155,13 @@ class LogicFormula:
     def __repr_colored__(self, level: int) -> str:
         raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
 
-    def __contains__(self, variable: Variable) -> bool:
-        raise NotImplementedError(f"__contains__ not implemented for {self}")
+    def __iter__(self) -> Iterator[Variable]:
+        raise NotImplementedError(f"__iter__ not implemented for {self}")
+
+    def __getitem__(self, variable: Variable):
+        from formula.variable_info import VariableInfo
+
+        return VariableInfo(self, variable)
 
     def is_syntaxically_eq(self, rhs: Any) -> bool:
         raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")

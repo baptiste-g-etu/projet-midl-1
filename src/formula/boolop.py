@@ -1,5 +1,7 @@
 from enum import StrEnum
-from typing import Any, Callable, Self
+from itertools import chain
+from typing import Any, Callable, Iterator, Self
+
 from .coloring import COLORING, color_level
 from .types import (
     IntoLogicFormula,
@@ -66,8 +68,10 @@ class BoolOp(LogicFormula):
             )
         return f"{formula1} {color_level(level, self.boolop)} {formula2}"
 
-    def __contains__(self, variable: "Variable") -> bool:
-        return variable in self.formula1 or variable in self.formula2
+    def __iter__(self) -> Iterator[Variable]:
+        variable_list = list(set(chain(iter(self.formula1), iter(self.formula2))))
+        variable_list.sort(key=lambda v: v.name)
+        return iter(variable_list)
 
     def __lt__(self, rhs: Any):
         raise SyntaxError("Cannot compare booleans")

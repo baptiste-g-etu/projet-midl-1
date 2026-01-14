@@ -1,5 +1,5 @@
 # Colors for colorful printing of formulas (from user's terminal)
-NORMAL = [35, 36, 34, 32, 33, 31]
+NORMAL = [35, 36, 34, 32, 33, 31, 95, 96, 94, 92, 93, 91]
 COLOR_RESET = "\x1b[39m"
 COLORING = True
 

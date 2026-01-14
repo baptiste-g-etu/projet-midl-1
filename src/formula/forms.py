@@ -1,9 +1,12 @@
-from typing import Literal
-from formula.coloring import color_level, COLORING
-from formula.notb import Not
-from formula.types import IntoLogicFormula, LogicFormula, into_logic_formula
+from itertools import chain
+from typing import Iterator, Literal
+
 from formula.boolop import BoolOp, BoolOpType
+from formula.coloring import COLORING, color_level
+from formula.notb import Not
 from formula.quantifier import Quantifier
+from formula.types import IntoLogicFormula, LogicFormula, into_logic_formula
+from formula.variable import Variable
 
 
 class NNF(LogicFormula):
@@ -63,8 +66,13 @@ class FormulaSet[
         else:
             return f"{{{', '.join(str(formula) for formula in self.formulas)}}}"
 
-    def __iter__(self):
+    def iter_formulas(self):
         return iter(self.formulas)
+
+    def __iter__(self) -> Iterator[Variable]:
+        variable_list = list(set(chain.from_iterable(self.formulas)))
+        variable_list.sort(key=lambda v: v.name)
+        return iter(variable_list)
 
     def __add__(self, formula: "FormulaSet[T, B]") -> "FormulaSet[T, B]":
         return FormulaSet[T, B](self.formulas + formula.formulas)
@@ -162,7 +170,7 @@ def dnf(
             flatten_conj(formula)
             for formula in flatten_disj(
                 into_logic_formula(formula).map_formula(dnf_inner)
-            )
+            ).iter_formulas()
         ]
     )
 
@@ -235,6 +243,6 @@ def cnf(
             flatten_disj(formula)
             for formula in flatten_conj(
                 into_logic_formula(formula).map_formula(cnf_inner)
-            )
+            ).iter_formulas()
         ]
     )

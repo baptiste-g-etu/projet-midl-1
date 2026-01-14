@@ -1,5 +1,7 @@
 from enum import StrEnum
-from typing import Self
+from itertools import chain
+from typing import Iterator, Self
+
 from .coloring import COLORING, color_level
 from .types import ArithExpression, IntoArithExpression, into_arith_expr
 from .variable import Variable
@@ -42,8 +44,10 @@ class ArithOp(ArithExpression):
             expr2 = f"{color_level(level, '(')}{expr2}{color_level(level, ')')}"
         return f"{expr1} {color_level(level, self.arithop)} {expr2}"
 
-    def __contains__(self, variable: "Variable") -> bool:
-        return variable in self.expr1 or variable in self.expr2
+    def __iter__(self) -> Iterator[Variable]:
+        variable_list = list(set(chain(iter(self.expr1), iter(self.expr2))))
+        variable_list.sort(key=lambda v: v.name)
+        return iter(variable_list)
 
     def __repr__(self) -> str:
         if COLORING:
