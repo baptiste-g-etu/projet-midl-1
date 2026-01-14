@@ -1,8 +1,9 @@
+from functools import reduce
 from typing import Any, Callable, Iterator, Self
-
 
 # Types that can be converted into an ArithExpression
 type IntoArithExpression = ArithExpression | int | str
+
 
 # Types that can be converted into a LogicFormula
 type IntoLogicFormula = LogicFormula | bool
@@ -92,25 +93,41 @@ class LogicFormula:
         from .boolop import BoolOp, BoolOpType
         from .notb import Not
 
-        return BoolOp(Not(self), BoolOpType.DISJ, into_logic_formula(rhs))
+        return BoolOp(
+            Not(into_canonical_logic_formula(self)),
+            BoolOpType.DISJ,
+            into_canonical_logic_formula(rhs),
+        )
 
     def __lshift__(self, rhs: Any):
         from .boolop import BoolOp, BoolOpType
         from .notb import Not
 
-        return BoolOp(Not(into_logic_formula(rhs)), BoolOpType.DISJ, self)
+        return BoolOp(
+            Not(into_canonical_logic_formula(rhs)),
+            BoolOpType.DISJ,
+            into_canonical_logic_formula(self),
+        )
 
     def __rrshift__(self, lhs: Any):
         from .boolop import BoolOp, BoolOpType
         from .notb import Not
 
-        return BoolOp(Not(into_logic_formula(lhs)), BoolOpType.DISJ, self)
+        return BoolOp(
+            Not(into_canonical_logic_formula(lhs)),
+            BoolOpType.DISJ,
+            into_canonical_logic_formula(self),
+        )
 
     def __rlshift__(self, lhs: Any):
         from .boolop import BoolOp, BoolOpType
         from .notb import Not
 
-        return BoolOp(Not(self), BoolOpType.DISJ, into_logic_formula(lhs))
+        return BoolOp(
+            Not(into_canonical_logic_formula(self)),
+            BoolOpType.DISJ,
+            into_canonical_logic_formula(lhs),
+        )
 
     def __lt__(self, rhs: Any):
         raise SyntaxError("Cannot compare logical formulas")
@@ -135,28 +152,44 @@ class LogicFormula:
     def __or__(self, rhs: IntoLogicFormula):
         from .boolop import BoolOp, BoolOpType
 
-        return BoolOp(self, BoolOpType.DISJ, into_logic_formula(rhs))
+        return BoolOp(
+            into_canonical_logic_formula(self),
+            BoolOpType.DISJ,
+            into_canonical_logic_formula(rhs),
+        )
 
     def __ror__(self, lhs: IntoLogicFormula):
         from .boolop import BoolOp, BoolOpType
 
-        return BoolOp(into_logic_formula(lhs), BoolOpType.DISJ, self)
+        return BoolOp(
+            into_canonical_logic_formula(lhs),
+            BoolOpType.DISJ,
+            into_canonical_logic_formula(self),
+        )
 
     def __and__(self, rhs: IntoLogicFormula):
         from .boolop import BoolOp, BoolOpType
 
-        return BoolOp(self, BoolOpType.CONJ, into_logic_formula(rhs))
+        return BoolOp(
+            into_canonical_logic_formula(self),
+            BoolOpType.CONJ,
+            into_canonical_logic_formula(rhs),
+        )
 
     def __rand__(self, lhs: IntoLogicFormula):
         from .boolop import BoolOp, BoolOpType
 
-        return BoolOp(into_logic_formula(lhs), BoolOpType.CONJ, self)
+        return BoolOp(
+            into_canonical_logic_formula(lhs),
+            BoolOpType.CONJ,
+            into_canonical_logic_formula(self),
+        )
 
     def __repr_colored__(self, level: int) -> str:
-        raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
+        return into_canonical_logic_formula(self).__repr_colored__(level)
 
     def __iter__(self) -> Iterator[Variable]:
-        raise NotImplementedError(f"__iter__ not implemented for {self}")
+        return iter(into_canonical_logic_formula(self))
 
     def __getitem__(self, variable: Variable):
         from formula.variable_info import VariableInfo
@@ -164,10 +197,12 @@ class LogicFormula:
         return VariableInfo(self, variable)
 
     def is_syntaxically_eq(self, rhs: Any) -> bool:
-        raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
+        return into_canonical_logic_formula(self).is_syntaxically_eq(
+            into_canonical_logic_formula(rhs)
+        )
 
-    def map_formula(self, fn: Callable[[Self], Self]) -> Self:
-        raise NotImplementedError(f"map_formula not implemented for {self}")
+    def map_formula(self, fn: Callable[["LogicFormula"], Self]) -> "LogicFormula":
+        return into_canonical_logic_formula(self).map_formula(fn)
 
 
 def into_arith_expr(var: Any) -> ArithExpression:
@@ -191,23 +226,39 @@ def into_arith_expr(var: Any) -> ArithExpression:
         return var
 
 
-def into_logic_formula(var: Any) -> LogicFormula:
+def into_canonical_logic_formula(var: Any) -> LogicFormula:
+    from formula.forms import CNF, DNF, NNF
+
     """
     Converts (almost) anything into a LogicFormula.
 
     This is useful to allow, for example `forall.a(True)` without having to type `forall.a(BoolConst(True))`.
     """
     from .boolconst import BoolConst
-    from .forms import NNF
 
     if isinstance(var, bool):
         return BoolConst(var)
+    elif isinstance(var, NNF):
+        return var.formula
+    elif isinstance(var, CNF):
+        return reduce(
+            LogicFormula.__and__,
+            [
+                reduce(LogicFormula.__or__, disj.iter_formulas())
+                for disj in var.formulas.iter_formulas()
+            ],
+        )
+    elif isinstance(var, DNF):
+        return reduce(
+            LogicFormula.__or__,
+            [
+                reduce(LogicFormula.__and__, conj.iter_formulas())
+                for conj in var.formulas.iter_formulas()
+            ],
+        )
     else:
         if not isinstance(var, LogicFormula):
             raise TypeError(
                 f"Cannot convert value of type {type(var)} into LogicFormula"
             )
-        if isinstance(var, NNF):
-            return var.formula
-        # TODO Add DNF and CNF
         return var

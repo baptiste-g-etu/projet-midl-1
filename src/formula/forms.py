@@ -5,7 +5,7 @@ from formula.boolop import BoolOp, BoolOpType
 from formula.coloring import COLORING, color_level
 from formula.notb import Not
 from formula.quantifier import Quantifier
-from formula.types import IntoLogicFormula, LogicFormula, into_logic_formula
+from formula.types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
 from formula.variable import Variable
 
 
@@ -46,13 +46,13 @@ def nnf(formula: IntoLogicFormula) -> LogicFormula:
                         )  # ~(a | b) -> (~a & ~b)
         return node
 
-    return into_logic_formula(formula).map_formula(nnf_inner)
+    return into_canonical_logic_formula(formula).map_formula(nnf_inner)
 
 
 class FormulaSet[
     T: LogicFormula | FormulaSet,
     B: Literal[BoolOpType.CONJ, BoolOpType.DISJ],
-](LogicFormula):
+]:
     # TODO It should be a set rather than a list, need to implement __hash__ on LogicFormula ?
     def __init__(self, formulas: list[T]) -> None:
         self.formulas = formulas
@@ -169,7 +169,7 @@ def dnf(
         [
             flatten_conj(formula)
             for formula in flatten_disj(
-                into_logic_formula(formula).map_formula(dnf_inner)
+                into_canonical_logic_formula(formula).map_formula(dnf_inner)
             ).iter_formulas()
         ]
     )
@@ -185,6 +185,9 @@ class CNF(LogicFormula):
 
     def __repr_colored__(self, level: int) -> str:
         return f"{color_level(level, 'CNF')}{self.formulas.__repr_colored__(level)}"
+
+    def __iter__(self) -> Iterator[Variable]:
+        return iter(into_canonical_logic_formula(self))
 
     def __repr__(self) -> str:
         if COLORING:
@@ -242,7 +245,7 @@ def cnf(
         [
             flatten_disj(formula)
             for formula in flatten_conj(
-                into_logic_formula(formula).map_formula(cnf_inner)
+                into_canonical_logic_formula(formula).map_formula(cnf_inner)
             ).iter_formulas()
         ]
     )

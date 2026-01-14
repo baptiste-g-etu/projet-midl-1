@@ -6,7 +6,7 @@ from .coloring import COLORING, color_level
 from .types import (
     IntoLogicFormula,
     LogicFormula,
-    into_logic_formula,
+    into_canonical_logic_formula,
 )
 from .variable import Variable
 
@@ -23,9 +23,9 @@ class BoolOp(LogicFormula):
     def __init__(
         self, formula1: IntoLogicFormula, boolop: BoolOpType, formula2: IntoLogicFormula
     ) -> None:
-        self.formula1 = into_logic_formula(formula1)
+        self.formula1 = into_canonical_logic_formula(formula1)
         self.boolop = boolop
-        self.formula2 = into_logic_formula(formula2)
+        self.formula2 = into_canonical_logic_formula(formula2)
 
     def is_syntaxically_eq(self, rhs: Self) -> bool:
         return (

@@ -5,7 +5,7 @@ from .coloring import COLORING, color_level
 from .types import (
     IntoLogicFormula,
     LogicFormula,
-    into_logic_formula,
+    into_canonical_logic_formula,
 )
 from .variable import IntoVariable, Variable, into_variable
 
@@ -30,7 +30,7 @@ class Quantifier(LogicFormula):
     ) -> None:
         self.quantifier = quantifier
         self.variable = into_variable(variable)
-        self.formula = into_logic_formula(formula)
+        self.formula = into_canonical_logic_formula(formula)
 
     def __repr_colored__(self, level: int):
         formula = self.formula.__repr_colored__(

@@ -1,24 +1,25 @@
+import string
+
+from decision.elim import decide  # type: ignore # noqa: F401
 from formula.arithop import ArithOp, ArithOpBuilder, ArithOpType
 from formula.boolconst import BoolConst
 from formula.boolop import BoolOp, BoolOpBuilder, BoolOpType
 from formula.coloring import COLORING, color_level  # type: ignore # noqa: F401
 from formula.comp import Comp, CompBuilder, CompType
-from formula.forms import CNF, cnf, DNF, dnf, FormulaSet, NNF, nnf  # type: ignore # noqa: F401
-from formula.types import (
-    ArithExpression,  # type: ignore # noqa: F401
-    LogicFormula,  # type: ignore # noqa: F401
-    IntoArithExpression,  # type: ignore # noqa: F401
-    IntoLogicFormula,
-    into_logic_formula,  # type: ignore # noqa: F401
-)
+from formula.forms import CNF, DNF, NNF, FormulaSet  # type: ignore # noqa: F401
 from formula.notb import Not
 from formula.quantifier import Quantifier, QuantifierBuilder, QuantifierType
+from formula.types import (
+    ArithExpression,  # type: ignore # noqa: F401
+    IntoArithExpression,  # type: ignore # noqa: F401
+    IntoLogicFormula,
+    LogicFormula,  # type: ignore # noqa: F401
+    into_canonical_logic_formula,  # type: ignore # noqa: F401
+)
 from formula.variable import IntoVariable, Variable
-from functions import swap_quantifiers, close, free_variables, negation, dual  # type: ignore # noqa: F401
-from decision.elim import decide  # type: ignore # noqa: F401
+from functions import close, dual, free_variables, negation, swap_quantifiers # type: ignore # noqa: F401
 from variables import a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z  # type: ignore # noqa: F401 # fmt: skip
 
-import string
 
 
 # Compatibility with the original syntax.py

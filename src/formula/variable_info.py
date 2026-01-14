@@ -2,7 +2,7 @@ from .boolop import BoolOp
 from .comp import Comp
 from .notb import Not
 from .quantifier import Quantifier
-from .types import IntoLogicFormula, LogicFormula, into_logic_formula
+from .types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
 from .variable import Variable
 
 
@@ -14,7 +14,7 @@ class VariableInfo:
     """
 
     def __init__(self, f: IntoLogicFormula, v: Variable) -> None:
-        f = into_logic_formula(f)
+        f = into_canonical_logic_formula(f)
         if v not in f:
             raise KeyError("Variable is not in formula")
         self.variable: Variable = v

@@ -10,7 +10,7 @@ from formula.boolop import BoolOp, BoolOpType
 from formula.comp import Comp
 from formula.notb import Not
 from formula.quantifier import Quantifier, QuantifierBuilder, QuantifierType
-from formula.types import IntoLogicFormula, LogicFormula, into_logic_formula
+from formula.types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
 from formula.variable import Variable
 
 
@@ -26,7 +26,7 @@ def dual(formula: IntoLogicFormula) -> LogicFormula:
             raise ValueError("Cannot dualize a formula with quantifiers")
         return node
 
-    return into_logic_formula(formula).map_formula(swap_and_or)
+    return into_canonical_logic_formula(formula).map_formula(swap_and_or)
 
 
 # Function to find the logical negation of a formula (without adding `Not`)
@@ -58,7 +58,7 @@ def negation(formula: IntoLogicFormula) -> LogicFormula:
                 return node.formula.formula
         return node
 
-    return into_logic_formula(formula).map_formula(negation_inner)
+    return into_canonical_logic_formula(formula).map_formula(negation_inner)
 
 
 def swap_quantifiers(formula: IntoLogicFormula) -> LogicFormula:
@@ -76,11 +76,11 @@ def swap_quantifiers(formula: IntoLogicFormula) -> LogicFormula:
             return Quantifier(new_q, node.variable, node.formula)
         return node
 
-    return into_logic_formula(formula).map_formula(swap_q)
+    return into_canonical_logic_formula(formula).map_formula(swap_q)
 
 
 def close(f: IntoLogicFormula) -> LogicFormula:
-    f = into_logic_formula(f)
+    f = into_canonical_logic_formula(f)
     quantifier_builder = QuantifierBuilder(QuantifierType.FORALL)
     quantifier_builder.variables = free_variables(f)
 
@@ -88,5 +88,5 @@ def close(f: IntoLogicFormula) -> LogicFormula:
 
 
 def free_variables(f: IntoLogicFormula) -> list[Variable]:
-    f = into_logic_formula(f)
+    f = into_canonical_logic_formula(f)
     return [variable for variable in f if f[variable].is_free()]
