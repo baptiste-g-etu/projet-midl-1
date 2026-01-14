@@ -45,4 +45,4 @@ Pour faire des « fonctions » et d’autres syntaxes plus pratiques qui cr�
 
 Elles permettent, notamment dans les cas de `eqf`, `conj`, ou encore `allq` (qui sont donc des instances de constructeurs), de faire une classe appelable, limitant ainsi le nombre de fonctions nécessaires (car la classe contient l’opérateur et non la fonction).
 
-Elles permettent aussi de créer d’autres syntaxes, par exemple `forall.a.b.c(a < b)`, `forall` étant une instance de `QuantifierBuilder` ayant pour quantificateur le quantificateur universel, qui s’enrichit de variables à chaque variable après un point, et qui finalement va créer une instance de `Quantifier` lorsqu’elle est appelée sur une formule.
+Elles permettent aussi de créer d’autres syntaxes, par exemple `forall.a.b.c(a < b)`, `forall` étant une instance de `QuantifierBuilder` ayant pour quantificateur le quantificateur universel, qui s’enrichit de variables à chaque variable après un point, et qui va finalement quantifier une formule en créant des instances de `Quantifier` autour lorsqu’elle est appelée dessus.
