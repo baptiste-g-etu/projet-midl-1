@@ -2,7 +2,7 @@ from functools import reduce
 from typing import Any, Callable, Iterator, Self
 
 # Types that can be converted into an ArithExpression
-type IntoArithExpression = ArithExpression | int | str
+type IntoArithExpression = ArithExpression | int | float | str
 
 
 # Types that can be converted into a LogicFormula
@@ -211,11 +211,11 @@ def into_arith_expr(var: Any) -> ArithExpression:
 
     This is useful to allow, for example `Variable("a") < 1` without having to type `Variable("a") < IntegerConst(1)`.
     """
-    from .integerconst import IntegerConst
+    from .numconst import NumConst
     from .variable import Variable
 
-    if isinstance(var, int):
-        return IntegerConst(var)
+    if isinstance(var, int) or isinstance(var, float):
+        return NumConst(var)
     elif isinstance(var, str):
         return Variable(var)
     else:

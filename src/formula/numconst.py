@@ -4,8 +4,8 @@ from .types import ArithExpression
 from .variable import Variable
 
 
-class IntegerConst(ArithExpression):
-    def __init__(self, const: int) -> None:
+class NumConst(ArithExpression):
+    def __init__(self, const: int | float) -> None:
         self.const = const
 
     def is_syntaxically_eq(self, rhs: Self) -> bool:
