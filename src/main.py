@@ -1,4 +1,21 @@
+start = """\
 from prelude import *
+
+trans = forall.x.y.z(((x < y) & (y < z)) >> (x < z))        # Transitivité
+asym  = forall.x.y((x < y) >> ~(y < x))                     # Asymétrie
+conn  = forall.x.y.z((x == y) | (x < y) | (y < x))          # Connectivité
+dense = forall.x.y((x < y) >> exists.z((x < z) & (z < y)))  # Densité
+sextr = forall.x(exists.y.z((y < x) & (x < z)))             # Sans extrema
+
+do = trans & asym & conn & dense & sextr
+cnfdo = CNF(do)\
+"""
+print(f"""\
+\x1b[32;1mWelcome to projet-midl-1 !
+\x1b[22;33mThese commands were executed :\x1b[30;3m
+{"\n".join([f">>> {line}" for line in start.split("\n")])}\x1b[39;23m\
+""")
+exec(start)
 
 # form: list = [
 #     Eq, Eq(), EQUAL, EQUAL(),

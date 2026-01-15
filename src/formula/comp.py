@@ -8,7 +8,7 @@ from .variable import Variable
 
 
 class CompType(StrEnum):
-    LOWER_THAN = "<"
+    LOWER_THAN = "≺"
     EQUAL = "="
 
     def __repr__(self):

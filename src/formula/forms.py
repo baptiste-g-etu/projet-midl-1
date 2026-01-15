@@ -3,6 +3,7 @@ from typing import Iterator, Literal
 
 from formula.boolop import BoolOp, BoolOpType
 from formula.coloring import COLORING, color_level
+from formula.comp import Comp, CompType
 from formula.notb import Not
 from formula.quantifier import Quantifier
 from formula.types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
@@ -44,6 +45,16 @@ def nnf(formula: IntoLogicFormula) -> LogicFormula:
                         return nnf(
                             ~node.formula.formula1 & ~node.formula.formula2
                         )  # ~(a | b) -> (~a & ~b)
+            elif isinstance(node.formula, Comp):
+                match node.formula.comp:
+                    case CompType.LOWER_THAN:
+                        return (node.formula.expr1 == node.formula.expr2) | (
+                            node.formula.expr2 < node.formula.expr1
+                        )
+                    case CompType.EQUAL:
+                        return (node.formula.expr1 < node.formula.expr2) | (
+                            node.formula.expr2 < node.formula.expr1
+                        )
         return node
 
     return into_canonical_logic_formula(formula).map_formula(nnf_inner)
@@ -58,13 +69,13 @@ class FormulaSet[
         self.formulas = formulas
 
     def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, '{')}{color_level(level, ', ').join([formula.__repr_colored__(level + 1) for formula in self.formulas])}{color_level(level, '}')}"
+        return f"{color_level(level, '{')}{color_level(level, ',\n    ' if len(self.formulas) >= 5 else ', ').join([formula.__repr_colored__(level + 1) for formula in self.formulas])}{color_level(level, '}')}"
 
     def __repr__(self) -> str:
         if COLORING:
             return self.__repr_colored__(0)
         else:
-            return f"{{{', '.join(str(formula) for formula in self.formulas)}}}"
+            return f"{{{(',\n    ' if len(self.formulas) >= 5 else ', ').join(str(formula) for formula in self.formulas)}}}"
 
     def iter_formulas(self):
         return iter(self.formulas)

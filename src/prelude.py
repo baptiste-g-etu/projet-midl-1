@@ -82,6 +82,10 @@ exists = QuantifierBuilder(QuantifierType.EXISTS)
 true = top = BoolConst(True)
 false = bot = BoolConst(False)
 
+cnf = CNF
+dnf = DNF
+nnf = NNF
+
 # Define all ascii lowercase letters as variables
 for char in string.ascii_lowercase:
     globals()[char] = Variable(char)
