@@ -4,7 +4,7 @@ from typing import Iterator, Self
 
 from .coloring import COLORING, color_level
 from .types import ArithExpression, IntoArithExpression, into_arith_expr
-from .variable import Variable
+from .variable import IntoVariable, Variable, into_variable
 
 
 class ArithOpType(StrEnum):
@@ -66,6 +66,13 @@ class ArithOp(ArithExpression):
             ):
                 expr2 = f"({expr2})"
             return f"{expr1} {self.arithop} {expr2}"
+
+    def replace(self, variable: IntoVariable, expr: IntoArithExpression) -> "ArithOp":
+        return ArithOp(
+            self.expr1.replace(into_variable(variable), expr),
+            self.arithop,
+            self.expr2.replace(into_variable(variable), expr),
+        )
 
 
 class ArithOpBuilder:

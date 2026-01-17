@@ -1,7 +1,7 @@
-from typing import Any, Iterator, Self
+from typing import Any, Iterator
 
 from .coloring import COLORING, color_level
-from .types import ArithExpression
+from .types import ArithExpression, IntoArithExpression, into_arith_expr
 
 # Types that can be converted into a Variable
 type IntoVariable = Variable | str
@@ -11,7 +11,7 @@ class Variable(ArithExpression):
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def is_syntaxically_eq(self, rhs: Self) -> bool:
+    def is_syntaxically_eq(self, rhs: "Variable") -> bool:
         return self.name == rhs.name
 
     def __repr_colored__(self, level: int):
@@ -28,6 +28,14 @@ class Variable(ArithExpression):
             return self.__repr_colored__(0)
         else:
             return self.name
+
+    def replace(
+        self, variable: IntoVariable, expr: IntoArithExpression
+    ) -> ArithExpression:
+        if self.is_syntaxically_eq(into_variable(variable)):
+            return into_arith_expr(expr)
+        else:
+            return self
 
 
 def into_variable(var: Any) -> Variable:

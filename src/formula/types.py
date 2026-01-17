@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import Any, Callable, Iterator, Self
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Self, overload
 
 # Types that can be converted into an ArithExpression
 type IntoArithExpression = ArithExpression | int | float | str
@@ -11,6 +11,9 @@ type IntoLogicFormula = LogicFormula | bool
 
 # Types which are arithmetic expressions (usually ArithExpressions combined with arithmetic operators)
 class ArithExpression:
+    if TYPE_CHECKING:
+        from .variable import IntoVariable
+
     def __lt__(self, rhs: IntoArithExpression):
         from .comp import Comp, CompType
 
@@ -84,10 +87,15 @@ class ArithExpression:
     def is_syntaxically_eq(self, rhs: Any) -> bool:
         raise NotImplementedError(f"is_syntaxically_eq not implemented for {self}")
 
+    def replace(self, variable: IntoVariable, expr: IntoArithExpression) -> Self:
+        raise NotImplementedError(f"replace not implemented for {self}")
+
 
 # Types which output a logic formula (usually LogicFormulas combined with logic operators)
 class LogicFormula:
-    from .variable import Variable
+    if TYPE_CHECKING:
+        from .variable import IntoVariable, Variable
+        from .variable_info import VariableInfo
 
     def __rshift__(self, rhs: Any):
         from .boolop import BoolOp, BoolOpType
@@ -191,10 +199,84 @@ class LogicFormula:
     def __iter__(self) -> Iterator[Variable]:
         return iter(into_canonical_logic_formula(self))
 
-    def __getitem__(self, variable: Variable):
-        from formula.variable_info import VariableInfo
+    @overload
+    def __getitem__(
+        self,
+        arg: slice[IntoVariable, IntoArithExpression, None]
+        | tuple[slice[IntoVariable, IntoArithExpression, None], ...],
+    ) -> Self: ...
 
-        return VariableInfo(self, variable)
+    @overload
+    def __getitem__(self, arg: IntoVariable) -> VariableInfo: ...
+
+    def __getitem__(
+        self,
+        arg: IntoVariable
+        | slice[IntoVariable, IntoArithExpression, None]
+        | tuple[slice[IntoVariable, IntoArithExpression, None], ...],
+    ):
+        from .comp import Comp
+        from .quantifier import Quantifier
+        from .variable import Variable, into_variable
+
+        if isinstance(arg, slice):
+            # f[v:a]
+            arg = (arg,)
+        if isinstance(arg, tuple):
+            # f[v:a, x:b, ...]
+            replacements = [
+                (into_variable(sli.start), into_arith_expr(sli.stop)) for sli in arg
+            ]
+
+            # Replace the first variable with a placeholder name
+
+            for i, (old, _) in enumerate(replacements):
+
+                def replace(node: LogicFormula):
+                    if isinstance(node, Comp):
+                        node = Comp(
+                            node.expr1.replace(old, into_variable(f"__temp{i}")),
+                            node.comp,
+                            node.expr2.replace(old, into_variable(f"__temp{i}")),
+                        )
+                    elif isinstance(node, Quantifier):
+                        if node.variable.is_syntaxically_eq(old):
+                            node = Quantifier(
+                                node.quantifier,
+                                into_variable(f"__temp{i}"),
+                                node.formula,
+                            )
+                    return node
+
+                self = into_canonical_logic_formula(self).map_formula(replace)
+
+            for i, (old, new) in enumerate(replacements):
+
+                def replace(node: LogicFormula):
+                    if isinstance(node, Comp):
+                        node = Comp(
+                            node.expr1.replace(into_variable(f"__temp{i}"), new),
+                            node.comp,
+                            node.expr2.replace(into_variable(f"__temp{i}"), new),
+                        )
+                    elif isinstance(node, Quantifier):
+                        if node.variable.is_syntaxically_eq(
+                            into_variable(f"__temp{i}")
+                        ):
+                            if isinstance(new, Variable):
+                                node = Quantifier(node.quantifier, new, node.formula)
+                            else:
+                                node = Quantifier(node.quantifier, old, node.formula)
+                    return node
+
+                self = into_canonical_logic_formula(self).map_formula(replace)
+            return self
+
+        else:
+            # f[v]
+            from .variable_info import VariableInfo
+
+            return VariableInfo(self, into_variable(arg))
 
     def is_syntaxically_eq(self, rhs: Any) -> bool:
         return into_canonical_logic_formula(self).is_syntaxically_eq(
@@ -227,7 +309,7 @@ def into_arith_expr(var: Any) -> ArithExpression:
 
 
 def into_canonical_logic_formula(var: Any) -> LogicFormula:
-    from formula.forms import CNF, DNF, NNF
+    from .forms import CNF, DNF, NNF
 
     """
     Converts (almost) anything into a LogicFormula.

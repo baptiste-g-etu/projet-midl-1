@@ -7,7 +7,7 @@ conn  = forall.x.y.z((x == y) | (x < y) | (y < x))          # Connectivité
 dense = forall.x.y((x < y) >> exists.z((x < z) & (z < y)))  # Densité
 sextr = forall.x(exists.y.z((y < x) & (x < z)))             # Sans extrema
 
-do = trans & asym & conn & dense & sextr
+do    = trans & asym & conn & dense & sextr
 cnfdo = CNF(do)\
 """
 print(f"""\

@@ -10,6 +10,38 @@ from formula.types import IntoLogicFormula, LogicFormula, into_canonical_logic_f
 from formula.variable import Variable
 
 
+# TODO Factor these into a Form subclass ?
+class PNF(LogicFormula):
+    def __init__(self, formula: LogicFormula) -> None:
+        self.formula = pnf(formula)
+
+    def __repr_colored__(self, level: int) -> str:
+        return f"{color_level(level, 'PNF(')}{self.formula.__repr_colored__(level + 1)}{color_level(level, ')')}"
+
+    def __repr__(self) -> str:
+        if COLORING:
+            return self.__repr_colored__(0)
+        else:
+            return f"PNF({self.formula})"
+
+
+def pnf(formula: IntoLogicFormula) -> LogicFormula:
+    formula = into_canonical_logic_formula(formula)
+    after_quantif = formula
+    while isinstance(after_quantif, Quantifier):
+        after_quantif = after_quantif.formula
+
+    # TODO Convert the formula into it’s prenex normal form instead of raising an AssertionError
+    def pnf_inner(node: LogicFormula):
+        assert not isinstance(node, Quantifier), (
+            "Cannot create a prenex formula from a non-prenex formula"
+        )
+        return node
+
+    after_quantif.map_formula(pnf_inner)
+    return formula
+
+
 class NNF(LogicFormula):
     def __init__(self, formula: LogicFormula) -> None:
         while isinstance(formula, Quantifier):
@@ -23,7 +55,7 @@ class NNF(LogicFormula):
         if COLORING:
             return self.__repr_colored__(0)
         else:
-            return f"NNF{self.formula}"
+            return f"NNF({self.formula})"
 
 
 def nnf(formula: IntoLogicFormula) -> LogicFormula:

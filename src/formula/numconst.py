@@ -1,7 +1,8 @@
 from typing import Iterator, Self
+
 from .coloring import COLORING, color_level
-from .types import ArithExpression
-from .variable import Variable
+from .types import ArithExpression, IntoArithExpression
+from .variable import IntoVariable, Variable
 
 
 class NumConst(ArithExpression):
@@ -22,3 +23,6 @@ class NumConst(ArithExpression):
             return self.__repr_colored__(0)
         else:
             return str(self.const)
+
+    def replace(self, variable: IntoVariable, expr: IntoArithExpression) -> Self:
+        return self
