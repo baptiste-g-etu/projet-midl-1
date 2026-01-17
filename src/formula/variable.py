@@ -8,6 +8,10 @@ type IntoVariable = Variable | str
 
 
 class Variable(ArithExpression):
+    """
+    Arithmetic variable.
+    """
+
     def __init__(self, name: str) -> None:
         self.name = name
 

@@ -1,3 +1,9 @@
+"""
+Main script.
+
+Made to be ran from an intercative shell (`python -i src/main.py`).
+"""
+
 start = """\
 from prelude import *
 

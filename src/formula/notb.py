@@ -10,6 +10,10 @@ from .variable import Variable
 
 
 class Not(LogicFormula):
+    """
+    Logical negation.
+    """
+
     def __init__(self, formula: IntoLogicFormula) -> None:
         self.formula = into_canonical_logic_formula(formula)
 

@@ -20,6 +20,10 @@ class BoolOpType(StrEnum):
 
 
 class BoolOp(LogicFormula):
+    """
+    Boolean operations (conjunctions and disjunctions).
+    """
+
     def __init__(
         self, formula1: IntoLogicFormula, boolop: BoolOpType, formula2: IntoLogicFormula
     ) -> None:

@@ -22,6 +22,10 @@ class QuantifierType(StrEnum):
 
 
 class Quantifier(LogicFormula):
+    """
+    Logical quantifier (universal and existential).
+    """
+
     def __init__(
         self,
         quantifier: QuantifierType,

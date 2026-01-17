@@ -10,7 +10,7 @@ class VariableInfo:
     """
     Represents a variable inside a formula.
 
-    Useful to get info such as free-ness (which is lazily calculated)
+    Useful to get info such as free-ness (which is lazily calculated).
     """
 
     def __init__(self, f: IntoLogicFormula, v: Variable) -> None:
@@ -25,7 +25,7 @@ class VariableInfo:
         Returns `True` if the variable is used freely at least once inside the formula,
         returning `False` if all uses of the variable are made when it is quantified.
 
-        If the variable is not inside the formula, this function returns `False`
+        If the variable is not inside the formula, this function returns `False`.
         """
 
         if self.variable not in self.formula:

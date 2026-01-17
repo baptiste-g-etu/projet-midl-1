@@ -6,6 +6,10 @@ from .variable import IntoVariable, Variable
 
 
 class NumConst(ArithExpression):
+    """
+    Number constant (float or int).
+    """
+
     def __init__(self, const: int | float) -> None:
         self.const = const
 

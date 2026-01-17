@@ -19,6 +19,10 @@ class CompType(StrEnum):
 
 
 class Comp(LogicFormula):
+    """
+    Comparison (equality and lower-than).
+    """
+
     def __init__(
         self, expr1: IntoArithExpression, comp: CompType, expr2: IntoArithExpression
     ) -> None:

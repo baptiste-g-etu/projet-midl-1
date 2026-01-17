@@ -18,6 +18,10 @@ class ArithOpType(StrEnum):
 
 
 class ArithOp(ArithExpression):
+    """
+    Arithmetic operations (addition, substraction and product).
+    """
+
     def __init__(
         self,
         expr1: IntoArithExpression,
@@ -64,16 +68,19 @@ class ArithOp(ArithExpression):
         else:
             expr1 = f"{self.expr1}"
             expr2 = f"{self.expr2}"
+
             if isinstance(self.expr1, ArithOp) and self.expr1.arithop in [
                 ArithOpType.SUM,
                 ArithOpType.SUB,
             ]:
                 expr1 = f"({expr1})"
+
             if isinstance(self.expr2, ArithOp) and self.expr2.arithop in [
                 ArithOpType.SUM,
                 ArithOpType.SUB,
             ]:
                 expr2 = f"({expr2})"
+
             if self.arithop == ArithOpType.PROD:
                 return f"{expr1}{expr2}"
             else:

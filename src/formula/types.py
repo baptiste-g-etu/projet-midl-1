@@ -9,8 +9,11 @@ type IntoArithExpression = ArithExpression | int | float | str
 type IntoLogicFormula = LogicFormula | bool
 
 
-# Types which are arithmetic expressions (usually ArithExpressions combined with arithmetic operators)
 class ArithExpression:
+    """
+    Base class for all arithmetic expressions.
+    """
+
     if TYPE_CHECKING:
         from .variable import IntoVariable
 
@@ -91,8 +94,11 @@ class ArithExpression:
         raise NotImplementedError(f"replace not implemented for {self}")
 
 
-# Types which output a logic formula (usually LogicFormulas combined with logic operators)
 class LogicFormula:
+    """
+    Base class for logical formulas.
+    """
+
     if TYPE_CHECKING:
         from .variable import IntoVariable, Variable
         from .variable_info import VariableInfo
@@ -309,14 +315,13 @@ def into_arith_expr(var: Any) -> ArithExpression:
 
 
 def into_canonical_logic_formula(var: Any) -> LogicFormula:
-    from .forms import CNF, DNF, NNF
-
     """
     Converts (almost) anything into a LogicFormula.
 
     This is useful to allow, for example `forall.a(True)` without having to type `forall.a(BoolConst(True))`.
     """
     from .boolconst import BoolConst
+    from .forms import CNF, DNF, NNF
 
     if isinstance(var, bool):
         return BoolConst(var)

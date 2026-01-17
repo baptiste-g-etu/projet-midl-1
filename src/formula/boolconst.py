@@ -6,6 +6,10 @@ from .variable import Variable
 
 
 class BoolConst(LogicFormula):
+    """
+    Boolean constants (True or False).
+    """
+
     def __init__(self, const: bool) -> None:
         self.const = const
 

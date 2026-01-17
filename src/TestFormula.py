@@ -1,4 +1,4 @@
-from functions import dual, swap_quantifiers
+from functions import dual, swap_quantifiers_old
 from prelude import (
     CNF,
     DNF,
@@ -61,10 +61,10 @@ print(f"dual(not(f)): {dual(Not(f))}")
 # map_formula(allq("x", f), dual)
 
 
-# Example usage for swap_quantifiers():
+# Example usage for swap_quantifiers_old():
 f2 = allq("x", exq("y", conj(ltf("x", "y"), ltf("y", "x"))))
-print(f"Test formula for swap_quantifiers(): {f2}")
-print(f"After swap_quantifiers(): {swap_quantifiers(f2)}")
+print(f"Test formula for swap_quantifiers_old(): {f2}")
+print(f"After swap_quantifiers_old(): {swap_quantifiers_old(f2)}")
 
 trans = forall.x.y.z(((x < y) & (y < z)) >> (x < z))  # Transitivité
 asym = forall.x.y((x < y) >> ~(y < x))  # Asymétrie

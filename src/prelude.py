@@ -1,4 +1,8 @@
-import string
+"""
+The prelude.
+
+A single file that re-exports most of the useful functions and classes and constants.
+"""
 
 from decision.elim import decide  # type: ignore # noqa: F401
 from formula.arithop import ArithOp, ArithOpBuilder, ArithOpType
@@ -24,7 +28,7 @@ from functions import (
     free_variables,  # type: ignore # noqa: F401
     free_variables as fv,  # type: ignore # noqa: F401
     negation,  # type: ignore # noqa: F401
-    swap_quantifiers,  # type: ignore # noqa: F401
+    swap_quantifiers_old,  # type: ignore # noqa: F401
 )
 from variables import a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z  # type: ignore # noqa: F401 # fmt: skip
 
@@ -92,7 +96,3 @@ false = bot = BoolConst(False)
 cnf = CNF
 dnf = DNF
 nnf = NNF
-
-# Define all ascii lowercase letters as variables
-for char in string.ascii_lowercase:
-    globals()[char] = Variable(char)
