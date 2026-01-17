@@ -111,10 +111,14 @@ def close(f: IntoLogicFormula) -> LogicFormula:
     Closes the formula with universal quantifiers.
     """
     f = into_canonical_logic_formula(f)
+
     quantifier_builder = QuantifierBuilder(QuantifierType.FORALL)
     quantifier_builder.variables = free_variables(f)
 
-    return quantifier_builder(f)
+    if len(quantifier_builder.variables) == 0:
+        return f
+    else:
+        return quantifier_builder(f)
 
 
 def free_variables(f: IntoLogicFormula) -> list[Variable]:

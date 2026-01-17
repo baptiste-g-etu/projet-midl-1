@@ -1,6 +1,8 @@
+# Compatibility with Python 3.12
+from __future__ import annotations
+
 from functools import reduce
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Self, overload
-
 # Types that can be converted into an ArithExpression
 type IntoArithExpression = ArithExpression | int | float | str
 
