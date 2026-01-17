@@ -15,16 +15,17 @@ from formula.types import (
     IntoLogicFormula,
     LogicFormula,  # type: ignore # noqa: F401
     into_canonical_logic_formula,  # type: ignore # noqa: F401
+    into_arith_expr,  # type: ignore # noqa: F401
 )
-from formula.variable import IntoVariable, Variable
+from formula.variable import IntoVariable, Variable, into_variable  # type: ignore # noqa: F401
 from functions import (
-    close,
-    dual,
-    free_variables,
-    free_variables as fv,
-    negation,
-    swap_quantifiers,
-)  # type: ignore # noqa: F401
+    close,  # type: ignore # noqa: F401
+    dual,  # type: ignore # noqa: F401
+    free_variables,  # type: ignore # noqa: F401
+    free_variables as fv,  # type: ignore # noqa: F401
+    negation,  # type: ignore # noqa: F401
+    swap_quantifiers,  # type: ignore # noqa: F401
+)
 from variables import a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z  # type: ignore # noqa: F401 # fmt: skip
 
 
