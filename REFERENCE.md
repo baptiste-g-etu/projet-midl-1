@@ -1,7 +1,7 @@
 ## Opérateurs
 Les opérateurs listés ici ne sont que ceux explicitement définis dans `setup.py`, mais il est possible d’y accéder directement avec le module python `formula`, par exemple : `formula.ArithOpType.SUM`.
-### Nullaires (constantes)
 
+### Nullaires (constantes)
 | Opérateur                                  |                Type de retour                 |                                       Retour |
 | ------------------------------------------ | :-------------------------------------------: | -------------------------------------------: |
 | `true`, `top`                              |       Constante booléenne (`BoolConst`)       |                                         Vrai |
@@ -16,6 +16,7 @@ Les opérateurs listés ici ne sont que ceux explicitement définis dans `setup.
 | `Sub`, `Sub()`                             | Type d’opération arithmétique (`ArithOpType`) |                                 Soustraction |
 | `Prod`, `Prod()`                           | Type d’opération arithmétique (`ArithOpType`) |                                      Produit |
 | `a`, `b`, `c`, `d`, …                      |             Variable (`Variable`)             |                                     Variable |
+
 ### Unaires
 | Opérateur                   | Raccourci conseillé                                                         |                    Type de l’argument                    |                                           Type de retour |
 | --------------------------- | --------------------------------------------------------------------------- | :------------------------------------------------------: | -------------------------------------------------------: |
@@ -40,9 +41,10 @@ Les opérateurs listés ici ne sont que ceux explicitement définis dans `setup.
 | `BoolOp(l, t, r)`, `BoolOpF(l, t, r)`      | `(l) & (r)`, <code>(l) &#124 (r)</code>, `(l) >> (r)`, `(l) << (r)` |           `l`, `r` : Type convertible en formule logique (`IntoLogicFormula`), `t` : type d’opération booléenne (`BoolOpType`)           |     Opération booléenne (`BoolOp`) |
 | `Comp(l, t, r)`, `ComparF(l, t r)`         | `l < r`, `l == r`                                                   |          `l`, `r` : Type convertible en expression arithmétique (`IntoArithExpression`), `t` : type de comparaison (`CompType`)          |               Comparaison (`Comp`) |
 | `Quantifier(q, v, f)`, `QuantifF(q, v, f)` | `forall.v(f)`, `exists.v(f)`                                        | `q` : Type de quantificateur (`QuantifierType`), `v` : variable (ou nom), `f` : Type convertible en formule logique (`IntoLogicFormula`) |      Quantificateur (`Quantifier`) |
+
 ## Constructeurs
-Pour faire des « fonctions » et d’autres syntaxes plus pratiques qui créent des formules ou des expressions, des classes constructeurs (`-Builder`) sont crées.  
+Pour faire des « fonctions » et d’autres syntaxes plus pratiques qui créent des formules ou des expressions, des classes constructeurs (-`Builder`) sont crées.  
 
 Elles permettent, notamment dans les cas de `eqf`, `conj`, ou encore `allq` (qui sont donc des instances de constructeurs), de faire une classe appelable, limitant ainsi le nombre de fonctions nécessaires (car la classe contient l’opérateur et non la fonction).
 
-Elles permettent aussi de créer d’autres syntaxes, par exemple `forall.a.b.c(a < b)`, `forall` étant une instance de `QuantifierBuilder` ayant pour quantificateur le quantificateur universel, qui s’enrichit de variables à chaque variable après un point, et qui va finalement quantifier une formule en créant des instances de `Quantifier` autour lorsqu’elle est appelée dessus.
+Elles permettent aussi de créer d’autres syntaxes, par exemple `forall.x.y.z(x < y)`, `forall` étant une instance de `QuantifierBuilder` ayant pour quantificateur le quantificateur universel, qui s’enrichit de variables à chaque variable après un point, et qui va finalement quantifier une formule en créant des instances de `Quantifier` autour lorsqu’elle est appelée dessus.
