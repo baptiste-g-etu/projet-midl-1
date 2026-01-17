@@ -1,4 +1,4 @@
-# Compatibility with Python 3.12
+# Compatibility with Python 3.12 and 3.13
 from __future__ import annotations
 
 from functools import reduce
