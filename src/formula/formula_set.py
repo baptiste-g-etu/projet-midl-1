@@ -14,10 +14,9 @@ class FormulaSet(LogicFormula):
     A set of formulas.
     """
 
-    # TODO It should be a set rather than a list, need to implement __hash__ on LogicFormula ?
     def __init__(
         self,
-        formulas: list[LogicFormula | Self],
+        formulas: set[LogicFormula | Self],
         op: BoolOpType,
     ) -> None:
         self.formulas = formulas
@@ -47,13 +46,7 @@ class FormulaSet(LogicFormula):
         They should be of the same type of formulas and of the same type of operator.
         """
         assert self.op == other.op
-        if len(self.formulas) > 0 and len(other.formulas) > 0:
-            assert isinstance(self.formulas[0], FormulaSet) is isinstance(
-                other.formulas[0], FormulaSet
-            ), (
-                f"{isinstance(self.formulas[0], FormulaSet)=} is not {isinstance(other.formulas[0], FormulaSet)=}"
-            )
-        return FormulaSet(self.formulas + other.formulas, self.op)
+        return FormulaSet(set(chain(self.formulas, other.formulas)), self.op)
 
 
 def flatten_disj(
@@ -65,7 +58,7 @@ def flatten_disj(
 
     if isinstance(formula, BoolOp) and formula.boolop == BoolOpType.DISJ:
         return flatten_disj(formula.formula1) + flatten_disj(formula.formula2)
-    return FormulaSet([formula], BoolOpType.DISJ)
+    return FormulaSet(set([formula]), BoolOpType.DISJ)
 
 
 def flatten_conj(
@@ -77,4 +70,4 @@ def flatten_conj(
 
     if isinstance(formula, BoolOp) and formula.boolop == BoolOpType.CONJ:
         return flatten_conj(formula.formula1) + flatten_conj(formula.formula2)
-    return FormulaSet([formula], BoolOpType.CONJ)
+    return FormulaSet(set([formula]), BoolOpType.CONJ)

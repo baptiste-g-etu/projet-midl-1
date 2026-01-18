@@ -159,7 +159,7 @@ class LogicFormula:
         raise SyntaxError("Cannot compare logical formulas")
 
     def __eq__(self, rhs: Any):
-        raise SyntaxError("Cannot compare logical formulas")
+        return self.is_syntaxically_eq(rhs)
 
     def __invert__(self):
         from .notb import Not
@@ -294,6 +294,9 @@ class LogicFormula:
 
     def map_formula(self, fn: Callable[["LogicFormula"], Self]) -> "LogicFormula":
         return into_canonical_logic_formula(self).map_formula(fn)
+
+    def __hash__(self) -> int:
+        return hash(repr(self))
 
 
 def into_arith_expr(var: Any) -> ArithExpression:

@@ -128,44 +128,43 @@ class DNF(LogicFormula):
                 if isinstance(node.formula, Not):
                     return node.formula.formula  # ~~a -> a
                 elif isinstance(node.formula, BoolOp):
+                    lhs = node.formula.formula1.map_formula(dnf_inner)
+                    # lhs = node.formula.formula1
+                    rhs = node.formula.formula2.map_formula(dnf_inner)
+                    # rhs = node.formula.formula2
                     match node.formula.boolop:
                         case BoolOpType.CONJ:
-                            return ~node.formula.formula1.map_formula(
-                                dnf_inner
-                            ) | ~node.formula.formula2.map_formula(dnf_inner)
+                            return ~lhs | ~rhs
                             # ~(a & b) -> (~a | ~b)
                         case BoolOpType.DISJ:
-                            return ~node.formula.formula1.map_formula(
-                                dnf_inner
-                            ) & ~node.formula.formula2.map_formula(dnf_inner)
+                            return ~lhs & ~rhs
                             # ~(a | b) -> (~a & ~b)
-            elif isinstance(node, BoolOp):
-                if node.boolop == BoolOpType.CONJ:
-                    if (
-                        isinstance(node.formula1, BoolOp)
-                        and node.formula1.boolop == BoolOpType.DISJ
-                    ):
-                        return (
-                            node.formula1.formula1 & node.formula2
-                            | node.formula1.formula2 & node.formula2
-                        ).map_formula(dnf_inner)  # (a | b) & c -> (a & c) | (b & c)
-                    elif (
-                        isinstance(node.formula2, BoolOp)
-                        and node.formula2.boolop == BoolOpType.DISJ
-                    ):
-                        return (
-                            node.formula1 & node.formula2.formula1
-                            | node.formula1 & node.formula2.formula2
-                        ).map_formula(dnf_inner)  # a & (b | c) -> (a & b) | (a & c)
+            elif isinstance(node, BoolOp) and node.boolop == BoolOpType.CONJ:
+                if (
+                    isinstance(node.formula1, BoolOp)
+                    and node.formula1.boolop == BoolOpType.DISJ
+                ):
+                    return (
+                        node.formula1.formula1 & node.formula2
+                        | node.formula1.formula2 & node.formula2
+                    ).map_formula(dnf_inner)  # (a | b) & c -> (a & c) | (b & c)
+                elif (
+                    isinstance(node.formula2, BoolOp)
+                    and node.formula2.boolop == BoolOpType.DISJ
+                ):
+                    return (
+                        node.formula1 & node.formula2.formula1
+                        | node.formula1 & node.formula2.formula2
+                    ).map_formula(dnf_inner)  # a & (b | c) -> (a & b) | (a & c)
             return node
 
         self.formulas: FormulaSet = FormulaSet(
-            [
-                flatten_conj(formula)
+            set(
+                (flatten_conj(formula))
                 for formula in flatten_disj(
                     into_canonical_logic_formula(formula).map_formula(dnf_inner)
                 ).iter_formulas()
-            ],
+            ),
             BoolOpType.DISJ,
         )
 
@@ -231,12 +230,12 @@ class CNF(LogicFormula):
             return node
 
         self.formulas: FormulaSet = FormulaSet(
-            [
+            set(
                 flatten_disj(formula)
                 for formula in flatten_conj(
                     into_canonical_logic_formula(formula).map_formula(cnf_inner)
                 ).iter_formulas()
-            ],
+            ),
             BoolOpType.CONJ,
         )
 
