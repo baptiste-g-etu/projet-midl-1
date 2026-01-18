@@ -1,9 +1,9 @@
-from itertools import chain
-from typing import Iterator, Literal
+from typing import Iterator
 
 from formula.boolop import BoolOp, BoolOpType
 from formula.coloring import COLORING, color_level
 from formula.comp import Comp, CompType
+from formula.formula_set import FormulaSet, flatten_conj, flatten_disj
 from formula.notb import Not
 from formula.quantifier import Quantifier
 from formula.types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
@@ -105,65 +105,6 @@ class NNF(LogicFormula):
             return f"NNF({self.formula})"
 
 
-class FormulaSet[
-    T: LogicFormula | FormulaSet,
-    B: Literal[BoolOpType.CONJ, BoolOpType.DISJ],
-]:
-    """
-    A set of formulas.
-
-    Not a `LogicFormula` itself because it’s operator-agnostic.
-    """
-
-    # TODO It should be a set rather than a list, need to implement __hash__ on LogicFormula ?
-    def __init__(self, formulas: list[T]) -> None:
-        self.formulas = formulas
-
-    def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, '{')}{color_level(level, ',\n    ' if len(self.formulas) >= 5 else ', ').join([formula.__repr_colored__(level + 1) for formula in self.formulas])}{color_level(level, '}')}"
-
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__(0)
-        else:
-            return f"{{{(',\n    ' if len(self.formulas) >= 5 else ', ').join(str(formula) for formula in self.formulas)}}}"
-
-    def iter_formulas(self):
-        return iter(self.formulas)
-
-    def __iter__(self) -> Iterator[Variable]:
-        variable_list = list(set(chain.from_iterable(self.formulas)))
-        variable_list.sort(key=lambda v: v.name)
-        return iter(variable_list)
-
-    def __add__(self, formula: "FormulaSet[T, B]") -> "FormulaSet[T, B]":
-        return FormulaSet[T, B](self.formulas + formula.formulas)
-
-
-def flatten_disj(
-    formula: LogicFormula,
-) -> FormulaSet[LogicFormula, Literal[BoolOpType.DISJ]]:
-    """
-    Flattens a disjunctive `BoolOp` into a `FormulaSet`
-    """
-
-    if isinstance(formula, BoolOp) and formula.boolop == BoolOpType.DISJ:
-        return flatten_disj(formula.formula1) + flatten_disj(formula.formula2)
-    return FormulaSet([formula])
-
-
-def flatten_conj(
-    formula: LogicFormula,
-) -> FormulaSet[LogicFormula, Literal[BoolOpType.CONJ]]:
-    """
-    Flattens a conjunctive `BoolOp` into a `FormulaSet`
-    """
-
-    if isinstance(formula, BoolOp) and formula.boolop == BoolOpType.CONJ:
-        return flatten_conj(formula.formula1) + flatten_conj(formula.formula2)
-    return FormulaSet([formula])
-
-
 class DNF(LogicFormula):
     """
     Disjunctive Normal Form.
@@ -215,15 +156,14 @@ class DNF(LogicFormula):
                         ).map_formula(dnf_inner)  # a & (b | c) -> (a & b) | (a & c)
             return node
 
-        self.formulas: FormulaSet[
-            FormulaSet[LogicFormula, Literal[BoolOpType.CONJ]], Literal[BoolOpType.DISJ]
-        ] = FormulaSet(
+        self.formulas: FormulaSet = FormulaSet(
             [
                 flatten_conj(formula)
                 for formula in flatten_disj(
                     into_canonical_logic_formula(formula).map_formula(dnf_inner)
                 ).iter_formulas()
-            ]
+            ],
+            BoolOpType.DISJ,
         )
 
     def __repr_colored__(self, level: int) -> str:
@@ -287,15 +227,14 @@ class CNF(LogicFormula):
                         ).map_formula(cnf_inner)  # a | (b & c) -> (a | b) & (a | c)
             return node
 
-        self.formulas: FormulaSet[
-            FormulaSet[LogicFormula, Literal[BoolOpType.DISJ]], Literal[BoolOpType.CONJ]
-        ] = FormulaSet(
+        self.formulas: FormulaSet = FormulaSet(
             [
                 flatten_disj(formula)
                 for formula in flatten_conj(
                     into_canonical_logic_formula(formula).map_formula(cnf_inner)
                 ).iter_formulas()
-            ]
+            ],
+            BoolOpType.CONJ,
         )
 
     def __repr_colored__(self, level: int) -> str:

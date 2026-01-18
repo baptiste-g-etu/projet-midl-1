@@ -8,7 +8,6 @@ Temporary file to try recursive functions over all nodes in a tree.
 from formula.boolconst import BoolConst
 from formula.boolop import BoolOp, BoolOpType
 from formula.comp import Comp
-from formula.forms import PNF
 from formula.notb import Not
 from formula.quantifier import Quantifier, QuantifierBuilder, QuantifierType
 from formula.types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
@@ -131,33 +130,45 @@ def free_variables(f: IntoLogicFormula) -> list[Variable]:
 
 
 def separate_quantifiers(
-    f: PNF,
-) -> tuple[list[QuantifierBuilder], LogicFormula]:
+    f: IntoLogicFormula,
+) -> tuple[list[tuple[bool, QuantifierType, Variable]], LogicFormula]:
     """
-    Separates the quantifiers of a prenex formula from the inner formula.
+    Separates the quantifiers of a formula from the inner formula.
+
+    This formula is almost prenex, but it can also have `Not`s before or after the quantifiers.
+
+    It returns a list of tuples of boolean (that indicates if a `Not` was placed before the quantifier), quantifier type and variable, and the inner formula.
     """
     formula = into_canonical_logic_formula(f)
-    quantifiers: list[QuantifierBuilder] = []
+    quantifiers: list[tuple[bool, QuantifierType, Variable]] = []
 
-    while isinstance(formula, Quantifier):
-        quant = QuantifierBuilder(formula.quantifier)
-        quant.variables = [formula.variable]
-        quantifiers.append(quant)
+    invert = False
+    while isinstance(formula, Quantifier) or isinstance(formula, Not):
+        if isinstance(formula, Quantifier):
+            quantifiers.append((invert, formula.quantifier, formula.variable))
+            invert = False
+        else:
+            invert = not invert
         formula = formula.formula
+
+    if invert:
+        formula = Not(formula)
     quantifiers.reverse()
 
     return (quantifiers, formula)
 
 
 def join_quantifiers(
-    quantifiers: list[QuantifierBuilder],
+    quantifiers: list[tuple[bool, QuantifierType, Variable]],
     f: IntoLogicFormula,
-):
+) -> LogicFormula:
     """
     Applies a quantifier list to a formula.
     """
     f = into_canonical_logic_formula(f)
-    for quant in quantifiers:
-        f = quant(f)
-
+    for invert, qt, var in quantifiers:
+        if invert:
+            f = Not(Quantifier(qt, var, f))
+        else:
+            f = Quantifier(qt, var, f)
     return f

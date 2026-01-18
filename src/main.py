@@ -14,7 +14,7 @@ dense = forall.x.y((x < y) >> exists.z((x < z) & (z < y)))  # Densité
 sextr = forall.x(exists.y.z((y < x) & (x < z)))             # Sans extrema
 
 do    = trans & asym & conn & dense & sextr
-cnfdo = CNF(do)\
+cnfdo = cnf(do)\
 """
 print(f"""\
 \x1b[32;1mWelcome to projet-midl-1 !

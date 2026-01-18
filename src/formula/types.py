@@ -324,7 +324,9 @@ def into_canonical_logic_formula(var: Any) -> LogicFormula:
     This is useful to allow, for example `forall.a(True)` without having to type `forall.a(BoolConst(True))`.
     """
     from .boolconst import BoolConst
+    from .boolop import BoolOpType
     from .forms import CNF, DNF, NNF, PNF
+    from .formula_set import FormulaSet
 
     if isinstance(var, bool):
         return BoolConst(var)
@@ -333,21 +335,16 @@ def into_canonical_logic_formula(var: Any) -> LogicFormula:
     elif isinstance(var, PNF):
         return var.formula
     elif isinstance(var, CNF):
-        return reduce(
-            LogicFormula.__and__,
-            [
-                reduce(LogicFormula.__or__, disj.iter_formulas())
-                for disj in var.formulas.iter_formulas()
-            ],
-        )
+        return into_canonical_logic_formula(var.formulas)
     elif isinstance(var, DNF):
-        return reduce(
-            LogicFormula.__or__,
-            [
-                reduce(LogicFormula.__and__, conj.iter_formulas())
-                for conj in var.formulas.iter_formulas()
-            ],
-        )
+        return into_canonical_logic_formula(var.formulas)
+
+    elif isinstance(var, FormulaSet):
+        if var.op == BoolOpType.CONJ:
+            return reduce(LogicFormula.__and__, var.iter_formulas())
+        else:
+            return reduce(LogicFormula.__or__, var.iter_formulas())
+
     else:
         if not isinstance(var, LogicFormula):
             raise TypeError(
