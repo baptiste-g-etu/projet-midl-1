@@ -1,22 +1,24 @@
-from functions import dual, swap_quantifiers_old
+from functions import dual, swap_quantifiers
 from prelude import (
     CNF,
     DNF,
     NNF,
+    PNF,
     ConstF,
     Not,
     allq,
+    conj,
+    exists,
     exq,
+    forall,
     impl,
     ltf,
-    conj,
-    forall,
-    exists,
+    u,
     x,
     y,
     z,
-    u,
 )
+
 # from prelude import *
 # from functions import *
 
@@ -61,10 +63,10 @@ print(f"dual(not(f)): {dual(Not(f))}")
 # map_formula(allq("x", f), dual)
 
 
-# Example usage for swap_quantifiers_old():
+# Example usage for swap_quantifiers():
 f2 = allq("x", exq("y", conj(ltf("x", "y"), ltf("y", "x"))))
-print(f"Test formula for swap_quantifiers_old(): {f2}")
-print(f"After swap_quantifiers_old(): {swap_quantifiers_old(f2)}")
+print(f"Test formula for swap_quantifiers(): {f2}")
+print(f"After swap_quantifiers(): {swap_quantifiers(f2)}")
 
 trans = forall.x.y.z(((x < y) & (y < z)) >> (x < z))  # Transitivité
 asym = forall.x.y((x < y) >> ~(y < x))  # Asymétrie
@@ -74,10 +76,10 @@ sextr = forall.x(exists.y.z((y < x) & (x < z)))  # Sans extrema
 
 f3 = trans & asym & conn & dense & sextr
 print(f"f3         : {f3}")
-print(f"NNF(f3)    : {NNF(f3)}")
+print(f"NNF(f3)    : {NNF(PNF(f3))}")
 print(f"CNF(f3)    : {CNF(f3)}")
 print(f"\ntrans      : {trans}")
-print(f"NNF(trans) : {NNF(trans)}")
+print(f"NNF(trans) : {NNF(PNF(trans))}")
 print(f"DNF(trans) : {DNF(trans)}")
 print(f"\nasym       : {asym}")
 print(f"DNF(asym)  : {DNF(asym)}")

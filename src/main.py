@@ -19,7 +19,9 @@ cnfdo = CNF(do)\
 print(f"""\
 \x1b[32;1mWelcome to projet-midl-1 !
 \x1b[22;33mThese commands were executed :\x1b[39;2;3m
-{"\n".join([f">>> {line}" for line in start.split("\n")])}\x1b[22;23m\
+{"\n".join([f">>> {line}" for line in start.split("\n")])}\x1b[22;23m
+
+Enjoy !
 """)
 exec(start)
 

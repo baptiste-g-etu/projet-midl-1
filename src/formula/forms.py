@@ -57,10 +57,13 @@ class NNF(LogicFormula):
     This invariant is ensured by the constructor.
     """
 
-    def __init__(self, formula: IntoLogicFormula) -> None:
-        formula = into_canonical_logic_formula(formula)
-        while isinstance(formula, Quantifier):
-            formula = formula.formula
+    def __init__(self, formula: PNF) -> None:
+        f = into_canonical_logic_formula(formula)
+        last_quantifier = f
+        if isinstance(last_quantifier, Quantifier):
+            while isinstance(last_quantifier.formula, Quantifier):
+                last_quantifier = last_quantifier.formula
+        assert isinstance(last_quantifier, Quantifier)
 
         def nnf_inner(node: LogicFormula):
             if isinstance(node, Not):
@@ -70,11 +73,15 @@ class NNF(LogicFormula):
                     match node.formula.boolop:
                         case BoolOpType.CONJ:
                             return into_canonical_logic_formula(
-                                NNF(~node.formula.formula1 | ~node.formula.formula2)
+                                NNF(
+                                    PNF(~node.formula.formula1 | ~node.formula.formula2)
+                                )
                             )  # ~(a & b) -> (~a | ~b)
                         case BoolOpType.DISJ:
                             return into_canonical_logic_formula(
-                                NNF(~node.formula.formula1 & ~node.formula.formula2)
+                                NNF(
+                                    PNF(~node.formula.formula1 & ~node.formula.formula2)
+                                )
                             )  # ~(a | b) -> (~a & ~b)
                 elif isinstance(node.formula, Comp):
                     match node.formula.comp:
@@ -88,7 +95,10 @@ class NNF(LogicFormula):
                             )
             return node
 
-        self.formula = into_canonical_logic_formula(formula).map_formula(nnf_inner)
+        self.formula = f
+        last_quantifier.formula = into_canonical_logic_formula(
+            last_quantifier.formula
+        ).map_formula(nnf_inner)
 
     def __repr_colored__(self, level: int) -> str:
         return f"{color_level(level, 'NNF(')}{self.formula.__repr_colored__(level + 1)}{color_level(level, ')')}"

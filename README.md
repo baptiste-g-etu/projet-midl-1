@@ -20,7 +20,7 @@ La version minimale de Python pour pouvoir exécuter ce programme est la version
 
 ## Tâche 1
 
-`prelude.py` contient les synonymes et les opérateurs de base (c’est le remplacement du fichier initial `syntax.py`).
+`prelude.py` contient les synonymes et les opérateurs de base (c’est le remplacement du fichier initial `syntax.py`).  
 `formula.py` contient les classes utiles pour tout le projet, et de leurs méthodes.  
 Pour l'implémentation de Dual(), nous avons choisi de créer une fonction récursive `map_formula(formule, fonction)` qui va parcourir l'arbre de la formule en entrée, et y appliquer une fonction sur chaque nœud (parcours en profondeur). Cela sera plus simple pour les futures tâches. Ces fonctions se retrouvent pour l'instant dans le fichier `formules.py`.
 
@@ -50,6 +50,8 @@ Par exemple, `x < y | z < a` n’est pas valide (`y | z` ne pouvant pas s’éva
 2. Ajout de fonctions utilitaires dans `functions` (importées dans le prélude) :
     - `close` pour clore une formule.
     - `free_variables` (ou `fv`) pour lister l’ensemble des variables libres d’une formule.
+    - `separate_quantifiers` et `join_quantifiers` pour séparer et rassembler les quantificateurs d’une formule prénexe de l’intérieur de cette formule.
+    - `all_exists` pour remplacer tous les quantificateurs universels en quantificateurs existentiels.
 3. Ajout de la syntaxe `f[x]` pour obtenir les informations additionnelles qu’on peut connaître sur une `Variable` quand celle-ci est reliée à une formule (par exemple si elle est libre ou non).
     - Cette syntaxe construit une classe `VariableInfo`, et quelques méthodes sont définies dessus, par exemple `forall.x(x < y)[x].is_free()`.
     - Les informations ne sont calculées qu’au moment où on les demande, la construction de la classe `VariableInfo` ne fait rien.

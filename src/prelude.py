@@ -23,12 +23,15 @@ from formula.types import (
 )
 from formula.variable import IntoVariable, Variable, into_variable  # type: ignore # noqa: F401
 from functions import (
+    all_exists,  # type: ignore # noqa: F401
     close,  # type: ignore # noqa: F401
     dual,  # type: ignore # noqa: F401
     free_variables,  # type: ignore # noqa: F401
     free_variables as fv,  # type: ignore # noqa: F401
+    join_quantifiers,  # type: ignore # noqa: F401
     negation,  # type: ignore # noqa: F401
-    swap_quantifiers_old,  # type: ignore # noqa: F401
+    separate_quantifiers,  # type: ignore # noqa: F401
+    swap_quantifiers,  # type: ignore # noqa: F401
 )
 from variables import a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z  # type: ignore # noqa: F401 # fmt: skip
 

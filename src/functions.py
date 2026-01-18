@@ -8,6 +8,7 @@ Temporary file to try recursive functions over all nodes in a tree.
 from formula.boolconst import BoolConst
 from formula.boolop import BoolOp, BoolOpType
 from formula.comp import Comp
+from formula.forms import PNF
 from formula.notb import Not
 from formula.quantifier import Quantifier, QuantifierBuilder, QuantifierType
 from formula.types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
@@ -68,7 +69,7 @@ def negation(formula: IntoLogicFormula) -> LogicFormula:
     return into_canonical_logic_formula(formula).map_formula(negation_inner)
 
 
-def swap_quantifiers_old(formula: IntoLogicFormula) -> LogicFormula:
+def swap_quantifiers(formula: IntoLogicFormula) -> LogicFormula:
     """
     Swap all quantifiers in the formula: FORALL <-> EXISTS
     """
@@ -86,21 +87,21 @@ def swap_quantifiers_old(formula: IntoLogicFormula) -> LogicFormula:
     return into_canonical_logic_formula(formula).map_formula(swap_q)
 
 
-def swap_quantifiers(formula: IntoLogicFormula) -> LogicFormula:
+def all_exists(formula: IntoLogicFormula) -> LogicFormula:
     """
-    Swap all quantifiers in the formula: FORALL <-> EXISTS, while preserving logic.
+    Swap all universal quantifiers in the formula for existential quantifiers, while preserving logic.
 
     Simplifies some negations in quantifier chains.
     """
 
     def swap_q(node: LogicFormula):
-        if isinstance(node, Quantifier):
-            new_q_type = (
-                QuantifierType.EXISTS
-                if node.quantifier == QuantifierType.FORALL
-                else QuantifierType.FORALL
-            )
-            return Quantifier(new_q_type, node.variable, node.formula)
+        if isinstance(node, Quantifier) and node.quantifier == QuantifierType.FORALL:
+            if isinstance(node.formula, Not):
+                return ~Quantifier(
+                    QuantifierType.EXISTS, node.variable, node.formula.formula
+                )
+            else:
+                return ~Quantifier(QuantifierType.EXISTS, node.variable, ~node.formula)
         return node
 
     return into_canonical_logic_formula(formula).map_formula(swap_q)
@@ -127,3 +128,36 @@ def free_variables(f: IntoLogicFormula) -> list[Variable]:
     """
     f = into_canonical_logic_formula(f)
     return [variable for variable in f if f[variable].is_free()]
+
+
+def separate_quantifiers(
+    f: PNF,
+) -> tuple[list[QuantifierBuilder], LogicFormula]:
+    """
+    Separates the quantifiers of a prenex formula from the inner formula.
+    """
+    formula = into_canonical_logic_formula(f)
+    quantifiers: list[QuantifierBuilder] = []
+
+    while isinstance(formula, Quantifier):
+        quant = QuantifierBuilder(formula.quantifier)
+        quant.variables = [formula.variable]
+        quantifiers.append(quant)
+        formula = formula.formula
+    quantifiers.reverse()
+
+    return (quantifiers, formula)
+
+
+def join_quantifiers(
+    quantifiers: list[QuantifierBuilder],
+    f: IntoLogicFormula,
+):
+    """
+    Applies a quantifier list to a formula.
+    """
+    f = into_canonical_logic_formula(f)
+    for quant in quantifiers:
+        f = quant(f)
+
+    return f

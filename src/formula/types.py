@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import reduce
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Self, overload
+
 # Types that can be converted into an ArithExpression
 type IntoArithExpression = ArithExpression | int | float | str
 
@@ -323,11 +324,13 @@ def into_canonical_logic_formula(var: Any) -> LogicFormula:
     This is useful to allow, for example `forall.a(True)` without having to type `forall.a(BoolConst(True))`.
     """
     from .boolconst import BoolConst
-    from .forms import CNF, DNF, NNF
+    from .forms import CNF, DNF, NNF, PNF
 
     if isinstance(var, bool):
         return BoolConst(var)
     elif isinstance(var, NNF):
+        return var.formula
+    elif isinstance(var, PNF):
         return var.formula
     elif isinstance(var, CNF):
         return reduce(
