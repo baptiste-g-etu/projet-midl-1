@@ -58,12 +58,9 @@ class NNF(LogicFormula):
     """
 
     def __init__(self, formula: PNF) -> None:
-        f = into_canonical_logic_formula(formula)
-        last_quantifier = f
-        if isinstance(last_quantifier, Quantifier):
-            while isinstance(last_quantifier.formula, Quantifier):
-                last_quantifier = last_quantifier.formula
-        assert isinstance(last_quantifier, Quantifier)
+        from functions import join_quantifiers, separate_quantifiers
+
+        quantifiers, f = separate_quantifiers(formula)
 
         def nnf_inner(node: LogicFormula):
             if isinstance(node, Not):
@@ -95,10 +92,8 @@ class NNF(LogicFormula):
                             )
             return node
 
-        self.formula = f
-        last_quantifier.formula = into_canonical_logic_formula(
-            last_quantifier.formula
-        ).map_formula(nnf_inner)
+        f = f.map_formula(nnf_inner)
+        self.formula = join_quantifiers(quantifiers, f)
 
     def __repr_colored__(self, level: int) -> str:
         return f"{color_level(level, 'NNF(')}{self.formula.__repr_colored__(level + 1)}{color_level(level, ')')}"
@@ -117,7 +112,7 @@ class FormulaSet[
     """
     A set of formulas.
 
-    Not a LogicFormula itself because it’s operator-agnostic.
+    Not a `LogicFormula` itself because it’s operator-agnostic.
     """
 
     # TODO It should be a set rather than a list, need to implement __hash__ on LogicFormula ?
