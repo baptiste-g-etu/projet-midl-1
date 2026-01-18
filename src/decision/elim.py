@@ -1,10 +1,19 @@
+from formula.boolconst import BoolConst
 from formula.boolop import BoolOpType
 from formula.comp import Comp, CompType
 from formula.forms import DNF, NNF, PNF, FormulaSet
+from formula.formula_set import flatten_conj
 from formula.notb import Not
 from formula.quantifier import QuantifierType
 from formula.types import IntoLogicFormula, into_canonical_logic_formula
-from functions import all_exists, close, free_variables, separate_quantifiers
+from formula.variable import into_variable
+from functions import (
+    all_exists,
+    close,
+    compute_formula_only_constants,
+    free_variables,
+    separate_quantifiers,
+)
 
 
 def decide(f: IntoLogicFormula) -> bool:
@@ -12,6 +21,7 @@ def decide(f: IntoLogicFormula) -> bool:
     prenex = PNF(closed)
     alle = all_exists(prenex)
 
+    print(alle)
     quantifiers, current_formula = separate_quantifiers(alle)
 
     invert = (
@@ -30,68 +40,107 @@ def decide(f: IntoLogicFormula) -> bool:
         current_formula = DNF(current_formula)
         print(f"  - DNF : {current_formula}")
         # Now that the formula is in DNF, we assume the current exisential quantifier applies to each member of the DNF.
-        new_dnf: list[FormulaSet] = []
+        new_dnf: FormulaSet = FormulaSet([], BoolOpType.DISJ)
         for conj in current_formula.formulas.iter_formulas():
-            print(f"      - Conj {conj}")
-            var_in_free_variables = True
+            print(f"      - Conj : {conj}, ", end="")
+            var_is_not_free_in_conj = True
             assert type(conj) is FormulaSet
 
             for form in conj.iter_formulas():
-                if var not in free_variables(form):
-                    var_in_free_variables = False
+                if var in free_variables(form):
+                    var_is_not_free_in_conj = False
                     break
 
-            if var_in_free_variables:
+            end = False
+            if var_is_not_free_in_conj:
                 # var is in free_variables
-                print(f"      - {var} is in free_variables of the conjunction")
-                new_dnf.append(conj)
-                continue  # To the next conjunction of the outer DNF
+                # print(f"      - {var} isn’t in conjunction")
+                new_dnf.formulas.append(conj)
+                end = True  # To the next conjunction of the outer DNF
 
-            for form in conj.iter_formulas():
-                if form.is_syntaxically_eq(var < var):
-                    # var < var is in the conjunction, we insert an empty set (we could theoretically skip inserting)
-                    new_dnf.append(FormulaSet([], BoolOpType.CONJ))
+            if not end:
+                for form in conj.iter_formulas():
+                    if (
+                        isinstance(form, Comp)
+                        and form.is_syntaxically_eq(var < var)
+                        or isinstance(form, BoolConst)
+                        and not form.const
+                    ):
+                        # var < var or False are in the conjunction, we insert False (we could theoretically skip inserting)
+                        new_dnf.formulas.append(BoolConst(False))
+                        end = True
 
-            # var < x
-            var_on_rhs: FormulaSet = FormulaSet([], BoolOpType.CONJ)
-            # x < var
-            var_on_lhs: FormulaSet = FormulaSet([], BoolOpType.CONJ)
-            # var = x or x = var
-            var_equals: FormulaSet = FormulaSet([], BoolOpType.CONJ)
-            # x = y or x < y
-            var_not_present: FormulaSet = FormulaSet([], BoolOpType.CONJ)
+            if not end:
+                # x < var
+                var_on_lhs: FormulaSet = FormulaSet([], BoolOpType.CONJ)
+                # var < x
+                var_on_rhs: FormulaSet = FormulaSet([], BoolOpType.CONJ)
+                # var = x or x = var
+                var_equals: FormulaSet = FormulaSet([], BoolOpType.CONJ)
+                # x = y or x < y
+                var_not_present: FormulaSet = FormulaSet([], BoolOpType.CONJ)
 
-            for form in conj.iter_formulas():
-                if isinstance(form, Comp):
-                    if form.comp == CompType.LOWER_THAN:
-                        if form.expr1.is_syntaxically_eq(var):
-                            assert not form.expr2.is_syntaxically_eq(var)
-                            var_on_lhs.formulas.append(form)
-                        elif form.expr2.is_syntaxically_eq(var):
-                            var_on_rhs.formulas.append(form)
+                for form in conj.iter_formulas():
+                    if isinstance(form, Comp):
+                        if form.comp == CompType.LOWER_THAN:
+                            if form.expr1.is_syntaxically_eq(var):
+                                assert not form.expr2.is_syntaxically_eq(var)
+                                var_on_lhs.formulas.append(form)
+                            elif form.expr2.is_syntaxically_eq(var):
+                                var_on_rhs.formulas.append(form)
+                            else:
+                                var_not_present.formulas.append(form)
                         else:
-                            var_not_present.formulas.append(form)
+                            if form.is_syntaxically_eq(var == var):
+                                # Skip when var = var
+                                continue
+                            if form.expr1.is_syntaxically_eq(var):
+                                assert not form.expr2.is_syntaxically_eq(var)
+                                var_equals.formulas.append(form)
+                            elif form.expr2.is_syntaxically_eq(var):
+                                var_equals.formulas.append(form.expr2 == form.expr1)
+                            else:
+                                var_not_present.formulas.append(form)
+                    elif isinstance(form, BoolConst):
+                        assert (
+                            form.const
+                        )  # We would have stopped earlier if we found a False constant
                     else:
-                        if form.expr1.is_syntaxically_eq(var):
-                            assert not form.expr2.is_syntaxically_eq(var)
-                            var_equals.formulas.append(form)
-                        elif form.expr2.is_syntaxically_eq(var):
-                            var_equals.formulas.append(form.expr2 == form.expr1)
-                        else:
-                            var_not_present.formulas.append(form)
-                else:
-                    assert False, (
-                        f"The DNF contained something else than comparisons : {form}"
+                        assert False, (
+                            f"The DNF contained something else than comparisons and boolean constants : {form}"
+                        )
+
+                if len(var_equals.formulas) > 0:
+                    # We can replace all instances of the current variable with the found variable
+                    first_equality = var_equals.iter_formulas().__next__()
+                    assert isinstance(first_equality, Comp)
+                    new_var = into_variable(first_equality.expr2)
+                    assert not new_var.is_syntaxically_eq(var)
+
+                    new_dnf.formulas.append(
+                        flatten_conj(
+                            (var_on_lhs & var_on_rhs & var_equals)[var:new_var]
+                            & var_not_present
+                        )
                     )
+                elif len(var_on_lhs.formulas) > 0 and len(var_on_rhs.formulas) > 0:
+                    var_product = FormulaSet([], BoolOpType.CONJ)
+                    for lhs in var_on_lhs.iter_formulas():
+                        assert isinstance(lhs, Comp)
+                        for rhs in var_on_rhs.iter_formulas():
+                            assert isinstance(rhs, Comp), f"{rhs}"
+                            var_product.formulas.append(rhs.expr1 < lhs.expr2)
+                    new_dnf.formulas.append(flatten_conj(var_product & var_not_present))
+                else:
+                    new_dnf.formulas.append(var_not_present)
 
-            if len(var_equals.formulas) > 0:
-                # We can replace all instances of the current variable with the found variable
-                pass
-
-            raise NotImplementedError
+            print(f"now : {new_dnf.formulas[-1]}")
 
         invert = inv
         print()
+        current_formula = new_dnf
 
-    # Logical XOR gate
-    return True is not invert
+    if invert:
+        current_formula = Not(current_formula)
+    print(current_formula)
+    return compute_formula_only_constants(current_formula)

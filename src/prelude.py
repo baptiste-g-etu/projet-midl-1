@@ -25,6 +25,7 @@ from formula.variable import IntoVariable, Variable, into_variable  # type: igno
 from functions import (
     all_exists,  # type: ignore # noqa: F401
     close,  # type: ignore # noqa: F401
+    compute_formula_only_constants,  # type: ignore # noqa: F401
     dual,  # type: ignore # noqa: F401
     free_variables,  # type: ignore # noqa: F401
     free_variables as fv,  # type: ignore # noqa: F401

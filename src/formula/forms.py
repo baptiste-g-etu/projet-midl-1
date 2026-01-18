@@ -1,5 +1,6 @@
 from typing import Iterator
 
+from formula.boolconst import BoolConst
 from formula.boolop import BoolOp, BoolOpType
 from formula.coloring import COLORING, color_level
 from formula.comp import Comp, CompType
@@ -90,6 +91,8 @@ class NNF(LogicFormula):
                             return (node.formula.expr1 < node.formula.expr2) | (
                                 node.formula.expr2 < node.formula.expr1
                             )
+                elif isinstance(node.formula, BoolConst):
+                    return BoolConst(not node.formula.const)
             return node
 
         f = f.map_formula(nnf_inner)

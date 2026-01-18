@@ -341,8 +341,12 @@ def into_canonical_logic_formula(var: Any) -> LogicFormula:
 
     elif isinstance(var, FormulaSet):
         if var.op == BoolOpType.CONJ:
+            if len(var.formulas) == 0:
+                return BoolConst(True)
             return reduce(LogicFormula.__and__, var.iter_formulas())
         else:
+            if len(var.formulas) == 0:
+                return BoolConst(False)
             return reduce(LogicFormula.__or__, var.iter_formulas())
 
     else:

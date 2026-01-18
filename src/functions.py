@@ -172,3 +172,37 @@ def join_quantifiers(
         else:
             f = Quantifier(qt, var, f)
     return f
+
+
+def compute_formula_only_constants(f: IntoLogicFormula) -> bool:
+    """
+    Computes the result of a formula made of only constants
+    """
+    f = into_canonical_logic_formula(f)
+
+    def compute_formula_only_constants_inner(node: LogicFormula):
+        if isinstance(node, Quantifier):
+            return node.formula.map_formula(compute_formula_only_constants_inner)
+        elif isinstance(node, BoolConst):
+            return node
+        elif isinstance(node, BoolOp):
+            lhs = node.formula1.map_formula(compute_formula_only_constants_inner)
+            assert isinstance(lhs, BoolConst)
+            rhs = node.formula2.map_formula(compute_formula_only_constants_inner)
+            assert isinstance(rhs, BoolConst)
+            if node.boolop == BoolOpType.DISJ:
+                return BoolConst(lhs.const or rhs.const)
+            else:
+                return BoolConst(lhs.const and rhs.const)
+        elif isinstance(node, Not):
+            inner = node.formula.map_formula(compute_formula_only_constants_inner)
+            assert isinstance(inner, BoolConst)
+            return BoolConst(not inner.const)
+        else:
+            raise ValueError(
+                f"Unknown node type for compute_formula_only_constants : {node}"
+            )
+
+    res = f.map_formula(compute_formula_only_constants_inner)
+    assert isinstance(res, BoolConst)
+    return res.const
