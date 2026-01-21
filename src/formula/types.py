@@ -17,6 +17,8 @@ class ArithExpression:
     Base class for all arithmetic expressions.
     """
 
+    col: int
+
     if TYPE_CHECKING:
         from .variable import IntoVariable
 
@@ -84,7 +86,7 @@ class ArithExpression:
 
         return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
 
-    def __repr_colored__(self, level: int) -> str:
+    def __repr_colored__(self) -> str:
         raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
 
     def __iter__(self) -> Iterator[Any]:
@@ -101,6 +103,8 @@ class LogicFormula:
     """
     Base class for logical formulas.
     """
+
+    col: int
 
     if TYPE_CHECKING:
         from .variable import IntoVariable, Variable
@@ -202,8 +206,8 @@ class LogicFormula:
             into_canonical_logic_formula(self),
         )
 
-    def __repr_colored__(self, level: int) -> str:
-        return into_canonical_logic_formula(self).__repr_colored__(level)
+    def __repr_colored__(self) -> str:
+        return into_canonical_logic_formula(self).__repr_colored__()
 
     def __iter__(self) -> Iterator[Variable]:
         return iter(into_canonical_logic_formula(self))
@@ -343,7 +347,7 @@ def into_canonical_logic_formula(var: Any) -> LogicFormula:
         return into_canonical_logic_formula(var.formula)
 
     elif isinstance(var, FormulaSet):
-        if var.op == BoolOpType.CONJ:
+        if var.boolop == BoolOpType.CONJ:
             if len(var.formulas) == 0:
                 return BoolConst(True)
             return reduce(LogicFormula.__and__, var.iter_formulas())

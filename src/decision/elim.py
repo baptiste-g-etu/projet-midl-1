@@ -31,9 +31,10 @@ def decide(f: IntoLogicFormula, display: bool = True) -> bool:
     )
     for inv, qt, var in quantifiers:
         assert qt == QuantifierType.EXISTS
-        if invert:
-            current_formula = Not(current_formula)
-        invert = inv
+        # if invert:
+        #     current_formula = Not(current_formula)
+        if inv:
+            invert = not invert
         show(
             f"Eliminating \x1b[1;4mvariable {var}\x1b[22;24m in formula {current_formula} :\n"
         )

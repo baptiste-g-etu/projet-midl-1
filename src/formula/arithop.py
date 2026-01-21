@@ -2,7 +2,7 @@ from enum import StrEnum
 from itertools import chain
 from typing import Iterator, Self
 
-from display.coloring import COLORING, color_level
+from display.coloring import COLORING, color
 
 from .types import ArithExpression, IntoArithExpression, into_arith_expr
 from .variable import IntoVariable, Variable, into_variable
@@ -23,6 +23,8 @@ class ArithOp(ArithExpression):
     Arithmetic operations (addition, substraction and product).
     """
 
+    col = 2
+
     def __init__(
         self,
         expr1: IntoArithExpression,
@@ -40,23 +42,23 @@ class ArithOp(ArithExpression):
             and self.expr2.is_syntaxically_eq(rhs.expr2)
         )
 
-    def __repr_colored__(self, level: int) -> str:
-        expr1 = self.expr1.__repr_colored__(level)
-        expr2 = self.expr2.__repr_colored__(level)
+    def __repr_colored__(self) -> str:
+        expr1 = repr(self.expr1)
+        expr2 = repr(self.expr2)
         if isinstance(self.expr1, ArithOp) and self.expr1.arithop in [
             ArithOpType.SUM,
             ArithOpType.SUB,
         ]:
-            expr1 = f"{color_level(level, '(')}{expr1}{color_level(level, ')')}"
+            expr1 = f"{color(self.col, '(')}{expr1}{color(self.col, ')')}"
         if isinstance(self.expr2, ArithOp) and self.expr2.arithop in [
             ArithOpType.SUM,
             ArithOpType.SUB,
         ]:
-            expr2 = f"{color_level(level, '(')}{expr2}{color_level(level, ')')}"
+            expr2 = f"{color(self.col, '(')}{expr2}{color(self.col, ')')}"
         if self.arithop == ArithOpType.PROD:
             return f"{expr1}{expr2}"
         else:
-            return f"{expr1} {color_level(level, self.arithop)} {expr2}"
+            return f"{expr1} {color(self.col, self.arithop)} {expr2}"
 
     def __iter__(self) -> Iterator[Variable]:
         variable_list = list(set(chain(iter(self.expr1), iter(self.expr2))))
@@ -65,7 +67,7 @@ class ArithOp(ArithExpression):
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored__(0)
+            return self.__repr_colored__()
         else:
             expr1 = f"{self.expr1}"
             expr2 = f"{self.expr2}"

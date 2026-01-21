@@ -2,7 +2,7 @@ from enum import StrEnum
 from itertools import chain
 from typing import Any, Callable, Iterator, Self
 
-from display.coloring import COLORING, color_level
+from display.coloring import COLORING, color
 
 from .types import (
     IntoLogicFormula,
@@ -32,6 +32,12 @@ class BoolOp(LogicFormula):
         self.boolop = boolop
         self.formula2 = into_canonical_logic_formula(formula2)
 
+        match self.boolop:
+            case BoolOpType.DISJ:
+                self.col = 2
+            case BoolOpType.CONJ:
+                self.col = 1
+
     def is_syntaxically_eq(self, rhs: Self) -> bool:
         return (
             self.formula1.is_syntaxically_eq(rhs.formula1)
@@ -44,7 +50,7 @@ class BoolOp(LogicFormula):
         from .quantifier import Quantifier
 
         if COLORING:
-            return self.__repr_colored__(0)
+            return self.__repr_colored__()
         else:
             formula1 = str(self.formula1)
             formula2 = str(self.formula2)
@@ -58,20 +64,16 @@ class BoolOp(LogicFormula):
                 formula2 = f"({formula2})"
             return f"{formula1} {self.boolop} {formula2}"
 
-    def __repr_colored__(self, level: int) -> str:
+    def __repr_colored__(self) -> str:
         from .quantifier import Quantifier
 
-        formula1 = self.formula1.__repr_colored__(level + 1)
-        formula2 = self.formula2.__repr_colored__(level + 1)
+        formula1 = repr(self.formula1)
+        formula2 = repr(self.formula2)
         if isinstance(self.formula1, BoolOp) or isinstance(self.formula1, Quantifier):
-            formula1 = (
-                f"{color_level(level + 1, '(')}{formula1}{color_level(level + 1, ')')}"
-            )
+            formula1 = f"{color(self.formula1.col, '(')}{formula1}{color(self.formula1.col, ')')}"
         if isinstance(self.formula2, BoolOp) or isinstance(self.formula2, Quantifier):
-            formula2 = (
-                f"{color_level(level + 1, '(')}{formula2}{color_level(level + 1, ')')}"
-            )
-        return f"{formula1} {color_level(level, self.boolop)} {formula2}"
+            formula2 = f"{color(self.formula2.col, '(')}{formula2}{color(self.formula2.col, ')')}"
+        return f"{formula1} {color(self.col, self.boolop)} {formula2}"
 
     def __iter__(self) -> Iterator[Variable]:
         variable_list = list(set(chain(iter(self.formula1), iter(self.formula2))))

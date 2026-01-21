@@ -1,6 +1,6 @@
 from typing import Any, Iterator
 
-from display.coloring import COLORING, color_level
+from display.coloring import COLORING, color
 
 from .types import ArithExpression, IntoArithExpression, into_arith_expr
 
@@ -13,14 +13,16 @@ class Variable(ArithExpression):
     Arithmetic variable.
     """
 
+    col = 6
+
     def __init__(self, name: str) -> None:
         self.name = name
 
     def is_syntaxically_eq(self, rhs: "Variable") -> bool:
         return self.name == rhs.name
 
-    def __repr_colored__(self, level: int):
-        return color_level(level, self.name)
+    def __repr_colored__(self):
+        return f"\x1b[4m{color(self.col, self.name)}\x1b[24m"
 
     def __iter__(self) -> Iterator["Variable"]:
         return iter([self])
@@ -30,7 +32,7 @@ class Variable(ArithExpression):
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored__(0)
+            return self.__repr_colored__()
         else:
             return self.name
 

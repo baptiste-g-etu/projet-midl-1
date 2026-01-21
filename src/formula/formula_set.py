@@ -1,7 +1,7 @@
 from itertools import chain
 from typing import Iterator, Self
 
-from display.coloring import COLORING, color_level
+from display.coloring import COLORING, color
 
 from .boolop import BoolOp, BoolOpType
 from .types import LogicFormula
@@ -18,19 +18,25 @@ class FormulaSet(LogicFormula):
     def __init__(
         self,
         formulas: set[LogicFormula | Self],
-        op: BoolOpType,
+        boolop: BoolOpType,
     ) -> None:
         self.formulas = formulas
-        self.op = op
+        self.boolop = boolop
 
-    def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, f'{self.op}{{')}{color_level(level, ',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join([formula.__repr_colored__(level + 1) for formula in self.formulas])}{color_level(level, '}')}"
+        match self.boolop:
+            case BoolOpType.DISJ:
+                self.col = 2
+            case BoolOpType.CONJ:
+                self.col = 1
+
+    def __repr_colored__(self) -> str:
+        return f"{color(self.col, f'{self.boolop}{{')}{color(self.col, ',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join([repr(formula) for formula in self.formulas])}{color(self.col, '}')}"
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored__(0)
+            return self.__repr_colored__()
         else:
-            return f"{self.op}{{{(',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join(str(formula) for formula in self.formulas)}}}"
+            return f"{self.boolop}{{{(',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join(str(formula) for formula in self.formulas)}}}"
 
     def iter_formulas(self):
         return iter(self.formulas)
@@ -46,8 +52,8 @@ class FormulaSet(LogicFormula):
 
         They should be of the same type of formulas and of the same type of operator.
         """
-        assert self.op == other.op
-        return FormulaSet(set(chain(self.formulas, other.formulas)), self.op)
+        assert self.boolop == other.boolop
+        return FormulaSet(set(chain(self.formulas, other.formulas)), self.boolop)
 
 
 def flatten_disj(

@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import Callable, Iterator, Self
 
-from display.coloring import COLORING, color_level
+from display.coloring import COLORING, color
 
 from .types import (
     IntoLogicFormula,
@@ -27,6 +27,8 @@ class Quantifier(LogicFormula):
     Logical quantifier (universal and existential).
     """
 
+    col = 5
+
     def __init__(
         self,
         quantifier: QuantifierType,
@@ -37,13 +39,13 @@ class Quantifier(LogicFormula):
         self.variable = into_variable(variable)
         self.formula = into_canonical_logic_formula(formula)
 
-    def __repr_colored__(self, level: int):
-        formula = self.formula.__repr_colored__(
-            level + (1 if not isinstance(self.formula, Quantifier) else 0)
-        )
+    def __repr_colored__(self):
+        formula = repr(self.formula)
         if not isinstance(self.formula, Quantifier):
-            formula = f"{color_level(level, '(')}{formula}{color_level(level, ')')}"
-        return f"{color_level(level, self.quantifier)}{self.variable.__repr_colored__(level)}{color_level(level, '.')}{formula}"
+            formula = (
+                f"{color(self.formula.col, '(')}{formula}{color(self.formula.col, ')')}"
+            )
+        return f"{color(self.col, self.quantifier)}{self.variable}{color(self.col, '.')}{formula}"
 
     def __iter__(self) -> Iterator[Variable]:
         # TODO self.variable is in the formula ???
@@ -51,7 +53,7 @@ class Quantifier(LogicFormula):
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored__(0)
+            return self.__repr_colored__()
         else:
             formula = str(self.formula)
             if not isinstance(self.formula, Quantifier):

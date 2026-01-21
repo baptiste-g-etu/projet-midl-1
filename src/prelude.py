@@ -5,7 +5,7 @@ A single file that re-exports most of the useful functions and classes and const
 """
 
 from decision.elim import decide  # type: ignore # noqa: F401
-from display.coloring import COLORING, color_level  # type: ignore # noqa: F401
+from display.coloring import COLORING, color  # type: ignore # noqa: F401
 from formula.arithop import ArithOp, ArithOpBuilder, ArithOpType
 from formula.boolconst import BoolConst
 from formula.boolop import BoolOp, BoolOpBuilder, BoolOpType

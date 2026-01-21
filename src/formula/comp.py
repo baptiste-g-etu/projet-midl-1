@@ -2,7 +2,7 @@ from enum import StrEnum
 from itertools import chain
 from typing import Callable, Iterator, Self
 
-from display.coloring import COLORING, color_level
+from display.coloring import COLORING, color
 
 from .types import IntoArithExpression, LogicFormula, into_arith_expr
 from .variable import Variable
@@ -24,6 +24,8 @@ class Comp(LogicFormula):
     Comparison (equality and lower-than).
     """
 
+    col = 3
+
     def __init__(
         self, expr1: IntoArithExpression, comp: CompType, expr2: IntoArithExpression
     ) -> None:
@@ -38,12 +40,12 @@ class Comp(LogicFormula):
             and self.expr2.is_syntaxically_eq(rhs.expr2)
         )
 
-    def __repr_colored__(self, level: int) -> str:
-        return f"{self.expr1.__repr_colored__(level)} {color_level(level, self.comp)} {self.expr2.__repr_colored__(level)}"
+    def __repr_colored__(self) -> str:
+        return f"{self.expr1} {color(self.col, self.comp)} {self.expr2}"
 
     def __repr__(self) -> str:
         if COLORING:
-            return self.__repr_colored__(0)
+            return self.__repr_colored__()
         else:
             return f"{self.expr1} {self.comp} {self.expr2}"
 
