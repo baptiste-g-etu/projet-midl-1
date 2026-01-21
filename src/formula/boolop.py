@@ -2,7 +2,8 @@ from enum import StrEnum
 from itertools import chain
 from typing import Any, Callable, Iterator, Self
 
-from .coloring import COLORING, color_level
+from display.coloring import COLORING, color_level
+
 from .types import (
     IntoLogicFormula,
     LogicFormula,

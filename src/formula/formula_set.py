@@ -1,10 +1,11 @@
 from itertools import chain
 from typing import Iterator, Self
 
-from formula.boolop import BoolOp, BoolOpType
-from formula.coloring import COLORING, color_level
-from formula.types import LogicFormula
-from formula.variable import Variable
+from display.coloring import COLORING, color_level
+
+from .boolop import BoolOp, BoolOpType
+from .types import LogicFormula
+from .variable import Variable
 
 LONG_FORMULA = 100
 
@@ -23,13 +24,13 @@ class FormulaSet(LogicFormula):
         self.op = op
 
     def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, '{')}{color_level(level, ',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join([formula.__repr_colored__(level + 1) for formula in self.formulas])}{color_level(level, '}')}"
+        return f"{color_level(level, f'{self.op}{{')}{color_level(level, ',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join([formula.__repr_colored__(level + 1) for formula in self.formulas])}{color_level(level, '}')}"
 
     def __repr__(self) -> str:
         if COLORING:
             return self.__repr_colored__(0)
         else:
-            return f"{{{(',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join(str(formula) for formula in self.formulas)}}}"
+            return f"{self.op}{{{(',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join(str(formula) for formula in self.formulas)}}}"
 
     def iter_formulas(self):
         return iter(self.formulas)

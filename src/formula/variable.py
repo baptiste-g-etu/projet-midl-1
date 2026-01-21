@@ -1,6 +1,7 @@
 from typing import Any, Iterator
 
-from .coloring import COLORING, color_level
+from display.coloring import COLORING, color_level
+
 from .types import ArithExpression, IntoArithExpression, into_arith_expr
 
 # Types that can be converted into a Variable

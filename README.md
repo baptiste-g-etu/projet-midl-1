@@ -50,8 +50,9 @@ Par exemple, `x < y | z < a` n’est pas valide (`y | z` ne pouvant pas s’éva
 2. Ajout de fonctions utilitaires dans `functions` (importées dans le prélude) :
     - `close` pour clore une formule.
     - `free_variables` (ou `fv`) pour lister l’ensemble des variables libres d’une formule.
-    - `separate_quantifiers` et `join_quantifiers` pour séparer et rassembler les quantificateurs d’une formule prénexe de l’intérieur de cette formule.
+    - `separate_quantifiers` et `join_quantifiers` pour séparer et rassembler les quantificateurs de l’intérieur de la formule prénexe.
     - `all_exists` pour remplacer tous les quantificateurs universels en quantificateurs existentiels.
+    - `compute_formula_only_constants` pour calculer la vérité d’une formule composée uniquement de constantes.
 3. Ajout de la syntaxe `f[x]` pour obtenir les informations additionnelles qu’on peut connaître sur une `Variable` quand celle-ci est reliée à une formule (par exemple si elle est libre ou non).
     - Cette syntaxe construit une classe `VariableInfo`, et quelques méthodes sont définies dessus, par exemple `forall.x(x < y)[x].is_free()`.
     - Les informations ne sont calculées qu’au moment où on les demande, la construction de la classe `VariableInfo` ne fait rien.
@@ -66,3 +67,6 @@ Par exemple, `x < y | z < a` n’est pas valide (`y | z` ne pouvant pas s’éva
     - Les variables inutilisées présentes dans les quantificateurs ne sont pas comptées (`list(forall.x(y < z))` renvoie `[y, z]`).
 6. Ajout de la forme prénexe `PNF` pour représenter une formule sous forme prénexe.
     - Le constructeur vérifie seulement que la formule est en forme prénexe, sinon il lève une `AssertionError`.
+7. `FormulaSet` est désormais un `set` au lieu d’une `list`.
+	- Cela élimine les doublons, ce qui fait gagner un temps infini pour le passage en forme normale disjonctive (par exemple la dernière élimination de quantificateurs de la simple formule $\exists x.\forall y(x < y \lor x = y \lor y < x)$ générait une forme normale disjonctive de $5 971 968$ termes (environ 5 minutes à générer sur un bon ordinateur), qui passe à seulement $4$ termes grâces aux `set`s).
+	- Cela a nécessité l’implémentation de `__hash__` pour `LogicFormula` (pour le moment la fonction `__hash__` renvoie `hash(repr(self))`).

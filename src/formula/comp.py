@@ -2,13 +2,14 @@ from enum import StrEnum
 from itertools import chain
 from typing import Callable, Iterator, Self
 
-from .coloring import COLORING, color_level
+from display.coloring import COLORING, color_level
+
 from .types import IntoArithExpression, LogicFormula, into_arith_expr
 from .variable import Variable
 
 
 class CompType(StrEnum):
-    LOWER_THAN = "≺"
+    LOWER_THAN = "<"
     EQUAL = "="
 
     def __repr__(self):

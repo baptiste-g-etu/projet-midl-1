@@ -1,18 +1,31 @@
 from typing import Iterator
 
-from formula.boolconst import BoolConst
-from formula.boolop import BoolOp, BoolOpType
-from formula.coloring import COLORING, color_level
-from formula.comp import Comp, CompType
-from formula.formula_set import FormulaSet, flatten_conj, flatten_disj
-from formula.notb import Not
-from formula.quantifier import Quantifier
-from formula.types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
-from formula.variable import Variable
+from display.coloring import COLORING, color_level
+
+from .boolconst import BoolConst
+from .boolop import BoolOp, BoolOpType
+from .comp import Comp, CompType
+from .formula_set import FormulaSet, flatten_conj, flatten_disj
+from .notb import Not
+from .quantifier import Quantifier
+from .types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
+from .variable import Variable
 
 
-# TODO Factor these into a Form subclass ?
-class PNF(LogicFormula):
+class Form[T: LogicFormula | FormulaSet](LogicFormula):
+    formula: T
+
+    def __repr_colored__(self, level: int) -> str:
+        return f"{color_level(level, f'{self.__class__.__name__}(')}{self.formula.__repr_colored__(level + 1)}{color_level(level, ')')}"
+
+    def __repr__(self) -> str:
+        if COLORING:
+            return self.__repr_colored__(0)
+        else:
+            return f"{self.__class__.__name__}({self.formula})"
+
+
+class PNF(Form[LogicFormula]):
     """
     Prenex Normal Form.
 
@@ -38,17 +51,8 @@ class PNF(LogicFormula):
         after_quantif.map_formula(pnf_inner)
         self.formula = formula
 
-    def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, 'PNF(')}{self.formula.__repr_colored__(level + 1)}{color_level(level, ')')}"
 
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__(0)
-        else:
-            return f"PNF({self.formula})"
-
-
-class NNF(LogicFormula):
+class NNF(Form[LogicFormula]):
     """
     Negation Normal Form.
 
@@ -98,17 +102,8 @@ class NNF(LogicFormula):
         f = f.map_formula(nnf_inner)
         self.formula = join_quantifiers(quantifiers, f)
 
-    def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, 'NNF(')}{self.formula.__repr_colored__(level + 1)}{color_level(level, ')')}"
 
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__(0)
-        else:
-            return f"NNF({self.formula})"
-
-
-class DNF(LogicFormula):
+class DNF(Form[FormulaSet]):
     """
     Disjunctive Normal Form.
 
@@ -158,7 +153,7 @@ class DNF(LogicFormula):
                     ).map_formula(dnf_inner)  # a & (b | c) -> (a & b) | (a & c)
             return node
 
-        self.formulas: FormulaSet = FormulaSet(
+        self.formula = FormulaSet(
             set(
                 (flatten_conj(formula))
                 for formula in flatten_disj(
@@ -168,17 +163,8 @@ class DNF(LogicFormula):
             BoolOpType.DISJ,
         )
 
-    def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, 'DNF')}{self.formulas.__repr_colored__(level)}"
 
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__(0)
-        else:
-            return f"DNF({self.formulas})"
-
-
-class CNF(LogicFormula):
+class CNF(Form[FormulaSet]):
     """
     Conjunctive Normal Form.
 
@@ -229,7 +215,7 @@ class CNF(LogicFormula):
                         ).map_formula(cnf_inner)  # a | (b & c) -> (a | b) & (a | c)
             return node
 
-        self.formulas: FormulaSet = FormulaSet(
+        self.formula = FormulaSet(
             set(
                 flatten_disj(formula)
                 for formula in flatten_conj(
@@ -239,14 +225,5 @@ class CNF(LogicFormula):
             BoolOpType.CONJ,
         )
 
-    def __repr_colored__(self, level: int) -> str:
-        return f"{color_level(level, 'CNF')}{self.formulas.__repr_colored__(level)}"
-
     def __iter__(self) -> Iterator[Variable]:
         return iter(into_canonical_logic_formula(self))
-
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__(0)
-        else:
-            return f"CNF({self.formulas})"

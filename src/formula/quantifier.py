@@ -1,7 +1,8 @@
 from enum import StrEnum
 from typing import Callable, Iterator, Self
 
-from .coloring import COLORING, color_level
+from display.coloring import COLORING, color_level
+
 from .types import (
     IntoLogicFormula,
     LogicFormula,

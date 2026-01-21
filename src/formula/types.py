@@ -159,7 +159,7 @@ class LogicFormula:
         raise SyntaxError("Cannot compare logical formulas")
 
     def __eq__(self, rhs: Any):
-        return self.is_syntaxically_eq(rhs)
+        return isinstance(rhs, self.__class__) and self.is_syntaxically_eq(rhs)
 
     def __invert__(self):
         from .notb import Not
@@ -338,9 +338,9 @@ def into_canonical_logic_formula(var: Any) -> LogicFormula:
     elif isinstance(var, PNF):
         return var.formula
     elif isinstance(var, CNF):
-        return into_canonical_logic_formula(var.formulas)
+        return into_canonical_logic_formula(var.formula)
     elif isinstance(var, DNF):
-        return into_canonical_logic_formula(var.formulas)
+        return into_canonical_logic_formula(var.formula)
 
     elif isinstance(var, FormulaSet):
         if var.op == BoolOpType.CONJ:

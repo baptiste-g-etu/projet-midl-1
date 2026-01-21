@@ -5,13 +5,14 @@ A single file that re-exports most of the useful functions and classes and const
 """
 
 from decision.elim import decide  # type: ignore # noqa: F401
+from display.coloring import COLORING, color_level  # type: ignore # noqa: F401
 from formula.arithop import ArithOp, ArithOpBuilder, ArithOpType
 from formula.boolconst import BoolConst
 from formula.boolop import BoolOp, BoolOpBuilder, BoolOpType
-from formula.coloring import COLORING, color_level  # type: ignore # noqa: F401
 from formula.comp import Comp, CompBuilder, CompType
 from formula.forms import CNF, DNF, NNF, PNF, FormulaSet  # type: ignore # noqa: F401
 from formula.notb import Not
+from formula.numconst import NumConst  # type: ignore # noqa: F401
 from formula.quantifier import Quantifier, QuantifierBuilder, QuantifierType
 from formula.types import (
     ArithExpression,  # type: ignore # noqa: F401
