@@ -1,6 +1,6 @@
 from typing import Callable, Iterator
 
-from display.coloring import COLORING, color
+from display import color, color_by_depth
 
 from .boolconst import BoolConst
 from .types import (
@@ -21,7 +21,7 @@ class Not(LogicFormula):
     def __init__(self, formula: IntoLogicFormula) -> None:
         self.formula = into_canonical_logic_formula(formula)
 
-    def __repr_colored__(self) -> str:
+    def __repr_syntax__(self) -> str:
         formula = repr(self.formula)
         if not (isinstance(self.formula, Not) or isinstance(self.formula, BoolConst)):
             formula = (
@@ -29,14 +29,11 @@ class Not(LogicFormula):
             )
         return f"¬{formula}"
 
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__()
-
-        formula = repr(self.formula)
-        if not (isinstance(self.formula, Not) or isinstance(self.formula, BoolConst)):
-            formula = f"({self.formula})"
-        return f"¬{formula}"
+    def __repr_depth__(self, level: int):
+        if isinstance(self.formula, Not) or isinstance(self.formula, BoolConst):
+            return f"{color_by_depth(level, '¬')}{self.formula.__repr_depth__(level)}"
+        else:
+            return f"{color_by_depth(level + 1, '¬(')}{self.formula.__repr_depth__(level + 1)}{color(level + 1, ')')}"
 
     def __iter__(self) -> Iterator[Variable]:
         return iter(self.formula)

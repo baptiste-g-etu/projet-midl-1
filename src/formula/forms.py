@@ -1,6 +1,6 @@
 from typing import Iterator
 
-from display.coloring import COLORING, color
+from display import color, color_by_depth
 
 from .boolconst import BoolConst
 from .boolop import BoolOp, BoolOpType
@@ -17,13 +17,11 @@ class Form[T: LogicFormula | FormulaSet](LogicFormula):
 
     col = 9
 
-    def __repr_colored__(self) -> str:
-        return f"{color(self.formula.col, '(')}{self.formula}{color(self.formula.col, ')')}"
+    def __repr_syntax__(self) -> str:
+        return f"{color(self.formula.col, f'{self.__class__.__name__}(')}{self.formula}{color(self.formula.col, ')')}"
 
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__()
-        return f"\x1b[3m{self.__class__.__name__}\x1b[23m({self.formula})"
+    def __repr_depth__(self, level: int) -> str:
+        return f"{color_by_depth(level, f'{self.__class__.__name__}(')}{self.formula.__repr_depth__(level + 1)}{color_by_depth(level, ')')}"
 
 
 class PNF(Form[LogicFormula]):

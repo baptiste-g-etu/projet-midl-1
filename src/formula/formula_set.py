@@ -1,7 +1,7 @@
 from itertools import chain
 from typing import Iterator, Self
 
-from display.coloring import COLORING, color
+from display import color, color_by_depth
 
 from .boolop import BoolOp, BoolOpType
 from .types import LogicFormula
@@ -29,14 +29,11 @@ class FormulaSet(LogicFormula):
             case BoolOpType.CONJ:
                 self.col = 1
 
-    def __repr_colored__(self) -> str:
+    def __repr_syntax__(self) -> str:
         return f"{color(self.col, f'{self.boolop}{{')}{color(self.col, ',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join([repr(formula) for formula in self.formulas])}{color(self.col, '}')}"
 
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__()
-        else:
-            return f"{self.boolop}{{{(',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join(str(formula) for formula in self.formulas)}}}"
+    def __repr_depth__(self, level: int) -> str:
+        return f"{color_by_depth(level, f'{self.boolop}{{')}{color_by_depth(level, ',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join([formula.__repr_depth__(level + 1) for formula in self.formulas])}{color_by_depth(level, '}')}"
 
     def iter_formulas(self):
         return iter(self.formulas)

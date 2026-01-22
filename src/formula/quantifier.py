@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import Callable, Iterator, Self
 
-from display.coloring import COLORING, color
+from display import color, color_by_depth
 
 from .types import (
     IntoLogicFormula,
@@ -39,7 +39,7 @@ class Quantifier(LogicFormula):
         self.variable = into_variable(variable)
         self.formula = into_canonical_logic_formula(formula)
 
-    def __repr_colored__(self):
+    def __repr_syntax__(self):
         formula = repr(self.formula)
         if not isinstance(self.formula, Quantifier):
             formula = (
@@ -47,18 +47,19 @@ class Quantifier(LogicFormula):
             )
         return f"{color(self.col, self.quantifier)}{self.variable}{color(self.col, '.')}{formula}"
 
+    def __repr_depth__(self, level: int):
+        formula = self.formula.__repr_depth__(
+            level + (1 if not isinstance(self.formula, Quantifier) else 0)
+        )
+        if not isinstance(self.formula, Quantifier):
+            formula = (
+                f"{color_by_depth(level, '(')}{formula}{color_by_depth(level, ')')}"
+            )
+        return f"{color_by_depth(level, self.quantifier)}{self.variable.__repr_depth__(level)}{color_by_depth(level, '.')}{formula}"
+
     def __iter__(self) -> Iterator[Variable]:
         # TODO self.variable is in the formula ???
         return iter(self.formula)
-
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__()
-        else:
-            formula = str(self.formula)
-            if not isinstance(self.formula, Quantifier):
-                formula = f"({formula})"
-            return f"{self.quantifier}{self.variable}.{formula}"
 
     def map_formula(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
         return fn(

@@ -1,6 +1,6 @@
 from typing import Any, Iterator
 
-from display.coloring import COLORING, color
+from display import color, color_by_depth
 
 from .types import ArithExpression, IntoArithExpression, into_arith_expr
 
@@ -21,20 +21,17 @@ class Variable(ArithExpression):
     def is_syntaxically_eq(self, rhs: "Variable") -> bool:
         return self.name == rhs.name
 
-    def __repr_colored__(self):
+    def __repr_syntax__(self):
         return f"\x1b[4m{color(self.col, self.name)}\x1b[24m"
+
+    def __repr_depth__(self, level: int):
+        return color_by_depth(level, self.name)
 
     def __iter__(self) -> Iterator["Variable"]:
         return iter([self])
 
     def __hash__(self) -> int:
         return hash(self.name)
-
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__()
-        else:
-            return self.name
 
     def replace(
         self, variable: IntoVariable, expr: IntoArithExpression

@@ -4,6 +4,8 @@ from __future__ import annotations
 from functools import reduce
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Self, overload
 
+import display
+
 # Types that can be converted into an ArithExpression
 type IntoArithExpression = ArithExpression | int | float | str
 
@@ -86,8 +88,20 @@ class ArithExpression:
 
         return ArithOp(into_arith_expr(lhs), ArithOpType.PROD, self)
 
-    def __repr_colored__(self) -> str:
-        raise NotImplementedError(f"__repr_colored__ not implemented for {self}")
+    def __repr_syntax__(self) -> str:
+        raise NotImplementedError(f"__repr_syntax__ not implemented for {self}")
+
+    def __repr_depth__(self, level: int) -> str:
+        raise NotImplementedError(f"__repr_depth__ not implemented for {self}")
+
+    def __repr__(self) -> str:
+        match display.COLORING:
+            case (
+                display.Coloring.NOT_COLORED | display.Coloring.SYNTAX  # type: ignore
+            ):
+                return self.__repr_syntax__()
+            case display.Coloring.DEPTH:  # type: ignore
+                return self.__repr_depth__(0)
 
     def __iter__(self) -> Iterator[Any]:
         raise NotImplementedError(f"__iter__ not implemented for {self}")
@@ -206,8 +220,28 @@ class LogicFormula:
             into_canonical_logic_formula(self),
         )
 
-    def __repr_colored__(self) -> str:
-        return into_canonical_logic_formula(self).__repr_colored__()
+    def __repr_syntax__(self) -> str:
+        f = into_canonical_logic_formula(self)
+        if f == self:
+            raise NotImplementedError(f"__repr_syntax__ is not implemented for {self}")
+        else:
+            return into_canonical_logic_formula(self).__repr_syntax__()
+
+    def __repr_depth__(self, level: int) -> str:
+        f = into_canonical_logic_formula(self)
+        if f == self:
+            raise NotImplementedError(f"__repr_depth__ is not implemented for {self}")
+        else:
+            return into_canonical_logic_formula(self).__repr_depth__(level)
+
+    def __repr__(self) -> str:
+        match display.COLORING:
+            case (
+                display.Coloring.NOT_COLORED | display.Coloring.SYNTAX  # type: ignore
+            ):
+                return self.__repr_syntax__()
+            case display.Coloring.DEPTH:  # type: ignore
+                return self.__repr_depth__(0)
 
     def __iter__(self) -> Iterator[Variable]:
         return iter(into_canonical_logic_formula(self))

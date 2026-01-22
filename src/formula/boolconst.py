@@ -1,6 +1,6 @@
 from typing import Callable, Iterator, Self
 
-from display.coloring import COLORING, color
+from display import color, color_by_depth
 
 from .types import LogicFormula
 from .variable import Variable
@@ -19,17 +19,14 @@ class BoolConst(LogicFormula):
     def is_syntaxically_eq(self, rhs: Self) -> bool:
         return self.const == rhs.const
 
-    def __repr_colored__(self):
+    def __repr_syntax__(self):
         return color(self.col, "⊤" if self.const else "⊥")
+
+    def __repr_depth__(self, level: int):
+        return color_by_depth(level, "⊤" if self.const else "⊥")
 
     def __iter__(self) -> Iterator[Variable]:
         return iter([])
-
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__()
-        else:
-            return "⊤" if self.const else "⊥"
 
     def map_formula(self, fn: Callable[[LogicFormula], LogicFormula]) -> LogicFormula:
         return fn(self)

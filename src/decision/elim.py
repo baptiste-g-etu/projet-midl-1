@@ -1,3 +1,4 @@
+from display import show
 from formula.boolconst import BoolConst
 from formula.boolop import BoolOpType
 from formula.comp import Comp, CompType
@@ -14,7 +15,6 @@ from functions import (
     free_variables,
     separate_quantifiers,
 )
-from display.coloring import show
 
 
 def decide(f: IntoLogicFormula, display: bool = True) -> bool:

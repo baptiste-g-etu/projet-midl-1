@@ -2,7 +2,7 @@ from enum import StrEnum
 from itertools import chain
 from typing import Any, Callable, Iterator, Self
 
-from display.coloring import COLORING, color
+from display import color, color_by_depth
 
 from .types import (
     IntoLogicFormula,
@@ -45,26 +45,7 @@ class BoolOp(LogicFormula):
             and self.formula2.is_syntaxically_eq(rhs.formula2)
         )
 
-    # TODO Find a way to factor the code of __repr__ and __repr_colored__ on all types
-    def __repr__(self) -> str:
-        from .quantifier import Quantifier
-
-        if COLORING:
-            return self.__repr_colored__()
-        else:
-            formula1 = str(self.formula1)
-            formula2 = str(self.formula2)
-            if isinstance(self.formula1, BoolOp) or isinstance(
-                self.formula1, Quantifier
-            ):
-                formula1 = f"({formula1})"
-            if isinstance(self.formula2, BoolOp) or isinstance(
-                self.formula1, Quantifier
-            ):
-                formula2 = f"({formula2})"
-            return f"{formula1} {self.boolop} {formula2}"
-
-    def __repr_colored__(self) -> str:
+    def __repr_syntax__(self) -> str:
         from .quantifier import Quantifier
 
         formula1 = repr(self.formula1)
@@ -74,6 +55,17 @@ class BoolOp(LogicFormula):
         if isinstance(self.formula2, BoolOp) or isinstance(self.formula2, Quantifier):
             formula2 = f"{color(self.formula2.col, '(')}{formula2}{color(self.formula2.col, ')')}"
         return f"{formula1} {color(self.col, self.boolop)} {formula2}"
+
+    def __repr_depth__(self, level: int) -> str:
+        from .quantifier import Quantifier
+
+        formula1 = self.formula1.__repr_depth__(level + 1)
+        formula2 = self.formula2.__repr_depth__(level + 1)
+        if isinstance(self.formula1, BoolOp) or isinstance(self.formula1, Quantifier):
+            formula1 = f"{color_by_depth(level + 1, '(')}{formula1}{color_by_depth(level + 1, ')')}"
+        if isinstance(self.formula2, BoolOp) or isinstance(self.formula2, Quantifier):
+            formula2 = f"{color_by_depth(level + 1, '(')}{formula2}{color_by_depth(level + 1, ')')}"
+        return f"{formula1} {color_by_depth(level, self.boolop)} {formula2}"
 
     def __iter__(self) -> Iterator[Variable]:
         variable_list = list(set(chain(iter(self.formula1), iter(self.formula2))))

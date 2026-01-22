@@ -2,7 +2,7 @@ from enum import StrEnum
 from itertools import chain
 from typing import Iterator, Self
 
-from display.coloring import COLORING, color
+from display import color, color_by_depth
 
 from .types import ArithExpression, IntoArithExpression, into_arith_expr
 from .variable import IntoVariable, Variable, into_variable
@@ -42,7 +42,7 @@ class ArithOp(ArithExpression):
             and self.expr2.is_syntaxically_eq(rhs.expr2)
         )
 
-    def __repr_colored__(self) -> str:
+    def __repr_syntax__(self) -> str:
         expr1 = repr(self.expr1)
         expr2 = repr(self.expr2)
         if isinstance(self.expr1, ArithOp) and self.expr1.arithop in [
@@ -60,34 +60,28 @@ class ArithOp(ArithExpression):
         else:
             return f"{expr1} {color(self.col, self.arithop)} {expr2}"
 
+    def __repr_depth__(self, level: int) -> str:
+        expr1 = self.expr1.__repr_depth__(level)
+        expr2 = self.expr2.__repr_depth__(level)
+        if isinstance(self.expr1, ArithOp) and self.expr1.arithop in [
+            ArithOpType.SUM,
+            ArithOpType.SUB,
+        ]:
+            expr1 = f"{color_by_depth(level, '(')}{expr1}{color_by_depth(level, ')')}"
+        if isinstance(self.expr2, ArithOp) and self.expr2.arithop in [
+            ArithOpType.SUM,
+            ArithOpType.SUB,
+        ]:
+            expr2 = f"{color_by_depth(level, '(')}{expr2}{color_by_depth(level, ')')}"
+        if self.arithop == ArithOpType.PROD:
+            return f"{expr1}{expr2}"
+        else:
+            return f"{expr1} {color_by_depth(level, self.arithop)} {expr2}"
+
     def __iter__(self) -> Iterator[Variable]:
         variable_list = list(set(chain(iter(self.expr1), iter(self.expr2))))
         variable_list.sort(key=lambda v: v.name)
         return iter(variable_list)
-
-    def __repr__(self) -> str:
-        if COLORING:
-            return self.__repr_colored__()
-        else:
-            expr1 = f"{self.expr1}"
-            expr2 = f"{self.expr2}"
-
-            if isinstance(self.expr1, ArithOp) and self.expr1.arithop in [
-                ArithOpType.SUM,
-                ArithOpType.SUB,
-            ]:
-                expr1 = f"({expr1})"
-
-            if isinstance(self.expr2, ArithOp) and self.expr2.arithop in [
-                ArithOpType.SUM,
-                ArithOpType.SUB,
-            ]:
-                expr2 = f"({expr2})"
-
-            if self.arithop == ArithOpType.PROD:
-                return f"{expr1}{expr2}"
-            else:
-                return f"{expr1} {self.arithop} {expr2}"
 
     def replace(self, variable: IntoVariable, expr: IntoArithExpression) -> "ArithOp":
         return ArithOp(
