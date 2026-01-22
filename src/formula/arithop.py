@@ -23,7 +23,7 @@ class ArithOp(ArithExpression):
     Arithmetic operations (addition, substraction and product).
     """
 
-    col = 2
+    col = 4
 
     def __init__(
         self,

@@ -68,8 +68,8 @@ Par exemple, `x < y | z < a` n’est pas valide (`y | z` ne pouvant pas s’éva
 6. Ajout de la forme prénexe `PNF` pour représenter une formule sous forme prénexe.
     - Le constructeur vérifie seulement que la formule est en forme prénexe, sinon il lève une `AssertionError`.
 7. `FormulaSet` est désormais un `set` au lieu d’une `list`.
-	- Cela élimine les doublons, ce qui fait gagner un temps infini pour le passage en forme normale disjonctive (par exemple la dernière élimination de quantificateurs de la simple formule $\exists x.\forall y(x < y \lor x = y \lor y < x)$ générait une forme normale disjonctive de $5 971 968$ termes (environ 5 minutes à générer sur un bon ordinateur), qui passe à seulement $4$ termes grâces aux `set`s).
-	- Cela a nécessité l’implémentation de `__hash__` pour `LogicFormula` (pour le moment la fonction `__hash__` renvoie `hash(repr(self))`).
+    - Cela élimine les doublons, ce qui fait gagner un temps infini pour le passage en forme normale disjonctive (par exemple la dernière élimination de quantificateurs de la simple formule $\exists x.\forall y(x < y \lor x = y \lor y < x)$ générait une forme normale disjonctive de $5 971 968$ termes (environ 5 minutes à générer sur un bon ordinateur), qui passe à seulement $4$ termes grâces aux `set`s).
+    - Cela a nécessité l’implémentation de `__hash__` pour `LogicFormula` (pour le moment la fonction `__hash__` renvoie `hash(repr(self))`).
 8. Ajout de la possibilité de changer la couleur des formules et l’affichage verbeux lors de l’exécution.
-	- Pour changer la couleur, il faut affecter la variable `display.COLORING` à `Coloring.DEPTH`, `Coloring.SYNTAX` ou `Coloring.NOT_COLORED`.
-	- Pour changer l’affichage verbeux, il faut affecter la variable `display.PRINTING` à `True` ou `False`.
+    - Pour changer la couleur, il faut affecter la variable `display.COLORING` à `Coloring.DEPTH`, `Coloring.SYNTAX` ou `Coloring.NOT_COLORED`.
+    - Pour changer l’affichage verbeux, il faut affecter la variable `display.PRINTING` à `True` ou `False`.
