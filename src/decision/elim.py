@@ -52,7 +52,7 @@ def decide(f: IntoLogicFormula, display: bool = True) -> bool:
     return compute_formula_only_constants(current_formula)
 
 
-def elim_variable(var: IntoVariable, f: DNF) -> FormulaSet:
+def elim_variable(var: IntoVariable, f: DNF) -> DNF:
     """
     Eliminates a `Variable` in a `DNF`.
     """
@@ -172,4 +172,4 @@ def elim_variable(var: IntoVariable, f: DNF) -> FormulaSet:
     )
 
     new_dnf.formulas = formulas
-    return new_dnf
+    return DNF(new_dnf)

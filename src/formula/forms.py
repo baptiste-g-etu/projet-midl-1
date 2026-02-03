@@ -112,7 +112,17 @@ class DNF(Form[FormulaSet]):
     This invariant is ensured by the constructor.
     """
 
-    def __init__(self, formula: IntoLogicFormula) -> None:
+    def __init__(self, formula: IntoLogicFormula | FormulaSet) -> None:
+        if (
+            isinstance(formula, FormulaSet)
+            and formula.boolop == BoolOpType.DISJ
+            and all(
+                isinstance(conj, FormulaSet) and conj.boolop == BoolOpType.CONJ
+                for conj in formula.formulas
+            )
+        ):
+            self.formula = formula
+            return
         formula = into_canonical_logic_formula(formula)
         while isinstance(formula, Quantifier):
             formula = formula.formula
@@ -173,7 +183,17 @@ class CNF(Form[FormulaSet]):
     This invariant is ensured by the constructor.
     """
 
-    def __init__(self, formula: IntoLogicFormula) -> None:
+    def __init__(self, formula: IntoLogicFormula | FormulaSet) -> None:
+        if (
+            isinstance(formula, FormulaSet)
+            and formula.boolop == BoolOpType.CONJ
+            and all(
+                isinstance(disj, FormulaSet) and disj.boolop == BoolOpType.DISJ
+                for disj in formula.formulas
+            )
+        ):
+            self.formula = formula
+            return
         formula = into_canonical_logic_formula(formula)
         while isinstance(formula, Quantifier):
             formula = formula.formula
