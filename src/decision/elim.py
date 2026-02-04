@@ -26,6 +26,9 @@ def decide(f: IntoLogicFormula, display: bool = True) -> bool:
     show(f"  (quantifiers replaced) : {alle}")
     quantifiers, current_formula = separate_quantifiers(alle)
 
+    #TODO : fix decide procedure issue  sextr is false
+    # decide(forall.x.y(exists.z((z<y)&(x<z))))
+
     invert = (
         False  # True if the next iteration should add a `Not` in front of the formula
     )
@@ -34,7 +37,7 @@ def decide(f: IntoLogicFormula, display: bool = True) -> bool:
         # if invert:
         #     current_formula = Not(current_formula)
         if inv:
-            invert = not invert
+            current_formula = ~current_formula
         show(
             f"Eliminating \x1b[1;4mvariable {var}\x1b[22;24m in formula {current_formula} :\n"
         )
@@ -46,8 +49,8 @@ def decide(f: IntoLogicFormula, display: bool = True) -> bool:
         current_formula = into_canonical_logic_formula(current_formula)
         show("")
 
-    if invert:
-        current_formula = Not(current_formula)
+    # if invert:
+    #     current_formula = Not(current_formula)
     show(f"Final formula : {current_formula}")
     return compute_formula_only_constants(current_formula)
 

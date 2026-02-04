@@ -3,7 +3,7 @@
 
 # To not make Mistera sad
 *.pdf
-
+.obsidian/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
