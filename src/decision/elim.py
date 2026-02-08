@@ -4,7 +4,6 @@ from formula.boolop import BoolOpType
 from formula.comp import Comp, CompType
 from formula.forms import DNF, NNF, PNF, FormulaSet
 from formula.formula_set import flatten_conj
-from formula.notb import Not
 from formula.quantifier import QuantifierType
 from formula.types import IntoLogicFormula, LogicFormula
 from formula.variable import IntoVariable, into_variable
@@ -29,9 +28,6 @@ def decide(f: IntoLogicFormula, display: bool = True) -> bool:
     #TODO : fix decide procedure issue  sextr is false
     # decide(forall.x.y(exists.z((z<y)&(x<z))))
 
-    invert = (
-        False  # True if the next iteration should add a `Not` in front of the formula
-    )
     for inv, qt, var in quantifiers:
         assert qt == QuantifierType.EXISTS
         # if invert:
@@ -49,8 +45,6 @@ def decide(f: IntoLogicFormula, display: bool = True) -> bool:
         # current_formula = current_formula
         show("")
 
-    # if invert:
-    #     current_formula = Not(current_formula)
     show(f"Final formula : {current_formula}")
     return compute_formula_only_constants(current_formula)
 

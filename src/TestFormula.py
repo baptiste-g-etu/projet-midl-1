@@ -1,9 +1,8 @@
+from decision.elim import decide
 from functions import dual, swap_quantifiers
 from prelude import (
     CNF,
     DNF,
-    NNF,
-    PNF,
     ConstF,
     Not,
     allq,
@@ -76,16 +75,20 @@ sextr = forall.x(exists.y.z((y < x) & (x < z)))  # Sans extrema
 
 f3 = trans & asym & conn & dense & sextr
 print(f"f3         : {f3}")
-print(f"NNF(f3)    : {NNF(PNF(f3))}")
-print(f"CNF(f3)    : {CNF(f3)}")
 print(f"\ntrans      : {trans}")
-print(f"NNF(trans) : {NNF(PNF(trans))}")
+print(f"CNF(f3)    : {CNF(f3)}")
+assert decide(trans)
 print(f"DNF(trans) : {DNF(trans)}")
 print(f"\nasym       : {asym}")
 print(f"DNF(asym)  : {DNF(asym)}")
+assert decide(asym)
 print(f"\nconn       : {conn}")
 print(f"DNF(conn)  : {DNF(conn)}")
+assert decide(conn)
 print(f"\ndense      : {dense}")
 print(f"DNF(dense) : {DNF(dense)}")
 print(f"\nsextr      : {sextr}")
 print(f"CNF(sextr) : {CNF(sextr)}")
+assert decide(sextr)
+
+assert not decide(forall.x.y(exists.z((z < y) & (x < z))))
