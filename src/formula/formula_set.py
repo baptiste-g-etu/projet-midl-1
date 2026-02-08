@@ -35,7 +35,7 @@ class FormulaSet(LogicFormula):
     def __repr_depth__(self, level: int) -> str:
         return f"{color_by_depth(level, f'{self.boolop}{{')}{color_by_depth(level, ',\n    ' if len(self.formulas) >= LONG_FORMULA else ', ').join([formula.__repr_depth__(level + 1) for formula in self.formulas])}{color_by_depth(level, '}')}"
 
-    def iter_formulas(self):
+    def iter_formulas(self) -> Iterator[LogicFormula | Self]:
         return iter(self.formulas)
 
     def __iter__(self) -> Iterator[Variable]:

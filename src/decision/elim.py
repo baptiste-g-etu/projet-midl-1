@@ -6,7 +6,7 @@ from formula.forms import DNF, NNF, PNF, FormulaSet
 from formula.formula_set import flatten_conj
 from formula.notb import Not
 from formula.quantifier import QuantifierType
-from formula.types import IntoLogicFormula, LogicFormula, into_canonical_logic_formula
+from formula.types import IntoLogicFormula, LogicFormula
 from formula.variable import IntoVariable, into_variable
 from functions import (
     all_exists,
@@ -36,8 +36,6 @@ def decide(f: IntoLogicFormula, display: bool = True) -> bool:
         assert qt == QuantifierType.EXISTS
         # if invert:
         #     current_formula = Not(current_formula)
-        if inv:
-            current_formula = ~current_formula
         show(
             f"Eliminating \x1b[1;4mvariable {var}\x1b[22;24m in formula {current_formula} :\n"
         )
@@ -46,7 +44,9 @@ def decide(f: IntoLogicFormula, display: bool = True) -> bool:
         current_formula = DNF(current_formula)
         show(f"  - DNF : {current_formula}\n")
         current_formula = elim_variable(var, current_formula)
-        current_formula = into_canonical_logic_formula(current_formula)
+        if inv:
+            current_formula = ~current_formula
+        # current_formula = current_formula
         show("")
 
     # if invert:

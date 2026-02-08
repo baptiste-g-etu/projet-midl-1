@@ -167,10 +167,9 @@ def join_quantifiers(
     """
     f = into_canonical_logic_formula(f)
     for invert, qt, var in quantifiers:
+        f = Quantifier(qt, var, f)
         if invert:
-            f = Not(Quantifier(qt, var, f))
-        else:
-            f = Quantifier(qt, var, f)
+            f = Not(f)
     return f
 
 
